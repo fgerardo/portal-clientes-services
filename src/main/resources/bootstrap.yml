@@ -1,0 +1,43 @@
+
+server:
+  port: ${ENV_CONF_SERVER_PORT:8092}
+  servlet:
+    context-path: /portal-clientes-services
+spring:
+  application:
+      name: portal-clientes-services
+  jmx:
+      default-domain: portal-clientes-services
+  cloud:
+      config:
+        enabled: false 
+  jackson:
+   serialization:
+     FAIL_ON_EMPTY_BEANS: false
+
+#Configuración para el tamaño de archivos permitidos
+  servlet:
+    multipart:
+      max-file-size: 1MB
+      max-request-size: 1MB
+  config:
+    import: file:/opt/SUNWappserver/conf/portal-clientes-services.yml 
+        
+#DETALLES DE LOGGING PARA ARCHIVOS Y NIVELES DE ERROR#
+logging:
+  level:
+    root: INFO
+    org:
+      springframework:
+        security: WARN
+        web : ERROR
+        web.servlet.DispatcherServlet: WARN #FOR SPRING CLOUD SLEUTH    
+      hibernate: WARN        
+      apache:
+        commons:
+          dbcp2: WARN  
+  file:
+    name: /opt/logs/portal-clientes-services.log
+  pattern:
+    file: '%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger [%file:%line] - %msg%n'
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger [%file:%line] - %msg%n'
