@@ -1,0 +1,73 @@
+<wsdl:definitions xmlns:apachesoap="http://xml.apache.org/xml-soap" xmlns:impl="http://services.admincontrasenas.web.habil.com" xmlns:intf="http://services.admincontrasenas.web.habil.com" xmlns:tns1="http://dto.services.admincontrasenas.web.habil.com" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="http://services.admincontrasenas.web.habil.com">
+<!-- WSDL created by Apache Axis version: 1.4
+Built on Apr 22, 2006 (06:55:48 PDT) -->
+<wsdl:types>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://services.admincontrasenas.web.habil.com">
+<import namespace="http://dto.services.admincontrasenas.web.habil.com"/>
+<element name="loginService">
+<complexType>
+<sequence>
+<element name="usuario" type="xsd:string"/>
+<element name="password" type="xsd:string"/>
+<element name="tipoUsr" type="xsd:string"/>
+</sequence>
+</complexType>
+</element>
+<element name="loginServiceResponse">
+<complexType>
+<sequence>
+<element name="loginServiceReturn" type="tns1:LoginResponseDto"/>
+</sequence>
+</complexType>
+</element>
+</schema>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://dto.services.admincontrasenas.web.habil.com">
+<complexType name="CookieDto">
+<sequence>
+<element name="dominio" nillable="true" type="xsd:string"/>
+<element name="nombreCookie" nillable="true" type="xsd:string"/>
+<element name="path" nillable="true" type="xsd:string"/>
+<element name="secure" type="xsd:boolean"/>
+<element name="token" nillable="true" type="xsd:string"/>
+<element name="value" nillable="true" type="xsd:string"/>
+</sequence>
+</complexType>
+<complexType name="LoginResponseDto">
+<sequence>
+<element name="cookieDto" nillable="true" type="tns1:CookieDto"/>
+<element name="mensaje" nillable="true" type="xsd:string"/>
+<element name="response" type="xsd:boolean"/>
+</sequence>
+</complexType>
+</schema>
+</wsdl:types>
+<wsdl:message name="loginServiceRequest">
+<wsdl:part element="impl:loginService" name="parameters"> </wsdl:part>
+</wsdl:message>
+<wsdl:message name="loginServiceResponse">
+<wsdl:part element="impl:loginServiceResponse" name="parameters"> </wsdl:part>
+</wsdl:message>
+<wsdl:portType name="LoginService">
+<wsdl:operation name="loginService">
+<wsdl:input message="impl:loginServiceRequest" name="loginServiceRequest"> </wsdl:input>
+<wsdl:output message="impl:loginServiceResponse" name="loginServiceResponse"> </wsdl:output>
+</wsdl:operation>
+</wsdl:portType>
+<wsdl:binding name="LoginServiceSoapBinding" type="impl:LoginService">
+<wsdlsoap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+<wsdl:operation name="loginService">
+<wsdlsoap:operation soapAction=""/>
+<wsdl:input name="loginServiceRequest">
+<wsdlsoap:body use="literal"/>
+</wsdl:input>
+<wsdl:output name="loginServiceResponse">
+<wsdlsoap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+</wsdl:binding>
+<wsdl:service name="LoginServiceService">
+<wsdl:port binding="impl:LoginServiceSoapBinding" name="LoginService">
+<wsdlsoap:address location="http://portalb.allianz.com.mx/AdminContrasenasWeb/services/LoginService"/>
+</wsdl:port>
+</wsdl:service>
+</wsdl:definitions>
