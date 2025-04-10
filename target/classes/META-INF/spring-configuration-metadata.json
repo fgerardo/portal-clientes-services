@@ -1,0 +1,82 @@
+{
+  "groups": [
+    {
+      "name": "roles",
+      "type": "mx.com.allianz.config.RolesConfiguration",
+      "sourceType": "mx.com.allianz.config.RolesConfiguration"
+    },
+    {
+      "name": "services",
+      "type": "mx.com.allianz.config.ServicesConfiguration",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    }
+  ],
+  "properties": [
+    {
+      "name": "roles.agente-tipo",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.RolesConfiguration"
+    },
+    {
+      "name": "roles.cliente-tipo",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.RolesConfiguration"
+    },
+    {
+      "name": "roles.empleado-tipo",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.RolesConfiguration"
+    },
+    {
+      "name": "services.passwor-authorization-services",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
+      "name": "services.portal-url-parametros",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
+      "name": "services.servicio-cifrado",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
+      "name": "services.servicio-estatus-siniestro-email",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
+      "name": "services.servicio-login",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
+      "name": "services.url-consultar-all-imagenes",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
+      "name": "services.url-consultar-usuario-bitacora",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
+      "name": "services.url-registrar-bitacora-acceso",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
+      "name": "services.url-servicio-recupera-password",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
+      "name": "services.usuario-authorization-services",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    }
+  ],
+  "hints": []
+}
