@@ -65,6 +65,10 @@ public class SoapClient {
 		return invokeCipherService(p, marshallerCipher);
 	}
 
+	public DecryptResponse getDecrypt(Decrypt p) {
+		return invokeCipherServiceDecrypt(p, marshallerCipher);
+	}
+
 	private CryptResponse invokeCipherService(Crypt p, Jaxb2Marshaller marshaller) {
 		template.setMarshaller(marshaller);
 		template.setUnmarshaller(marshaller);
@@ -135,12 +139,12 @@ public class SoapClient {
 	 * @param p Objeto con la cadena encriptada a desencriptar
 	 * @return objeto con la cadena desencriptada
 	 */
-	public DecryptResponse getDecrypt(Decrypt p) {
-		template = new WebServiceTemplate(marshaller);
+	private DecryptResponse invokeCipherServiceDecrypt(Decrypt p, Jaxb2Marshaller marshaller) {
+		template.setMarshaller(marshaller);
+		template.setUnmarshaller(marshaller);
 		JAXBElement<?> obj = (JAXBElement<?>) template.marshalSendAndReceive(servicesConfiguration.getServicioCifrado(),
 				p);
-		DecryptResponse response = (DecryptResponse) obj.getValue();
-		return response;
+		return (DecryptResponse) obj.getValue();
 	}
 
 	/**

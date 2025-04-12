@@ -1,4 +1,4 @@
-package mx.com.allianz.service;
+package mx.com.allianz.service.impl;
 
 import java.util.ArrayList;
 import java.util.Base64;
@@ -40,6 +40,7 @@ import mx.com.allianz.model.AccesoPortalRequest;
 import mx.com.allianz.model.LoginRequestModel;
 import mx.com.allianz.recupera.password.service.RecuperarContrasena;
 import mx.com.allianz.recupera.password.service.RecuperarContrasenaResponseDto;
+import mx.com.allianz.service.ILoginService;
 
 @Service
 public class LoginServiceImpl implements ILoginService {

@@ -7,6 +7,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.swagger.annotations.ApiModelProperty;
 import mx.com.allianz.commons.Codes;
 import mx.com.allianz.exception.BusinessException;
@@ -36,23 +38,27 @@ public class SingleResponse<R> implements Serializable {
 	 * Codigo de respuesta emitido
 	 */
 	@ApiModelProperty(value = "C\u00f3digo de respuesta emitido, puede ser de \u00e9xito, error o validaciones", required = true)
+	 @JsonProperty("responseCode")
 	private ResponseCode responseCode;
 
 	/**
 	 * Objeto de la respuesta
 	 */
 	@ApiModelProperty(value = "Objeto de la respuesta", required = true)
+    @JsonProperty("response")
 	private transient R response;
 	/**
 	 * Determina la respuesta es correcta(true) o contiene errores o
 	 * validaciones(false)
 	 */
 	@ApiModelProperty(value = "Determina la respuesta es correcta o no", notes = "En caso de \u00e9xito : true, En caso de errores: false, En caso de validaciones: false", required = true)
+	@JsonProperty("ok")
 	private boolean ok = false;
 	/**
 	 * Lista de validaciones en la respuesta
 	 */
 	@ApiModelProperty(value = "Lista de validaciones de negocio.")
+	 @JsonProperty("validations")
 	private List<ResponseCode> validationsCodes;
 
 	/**

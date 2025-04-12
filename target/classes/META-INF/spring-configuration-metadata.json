@@ -28,12 +28,22 @@
       "sourceType": "mx.com.allianz.config.RolesConfiguration"
     },
     {
+      "name": "services.consultar-servicio-usuario-email",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
       "name": "services.passwor-authorization-services",
       "type": "java.lang.String",
       "sourceType": "mx.com.allianz.config.ServicesConfiguration"
     },
     {
       "name": "services.portal-url-parametros",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
+      "name": "services.security-login-contratante",
       "type": "java.lang.String",
       "sourceType": "mx.com.allianz.config.ServicesConfiguration"
     },
@@ -53,7 +63,22 @@
       "sourceType": "mx.com.allianz.config.ServicesConfiguration"
     },
     {
+      "name": "services.servicio-polizas",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
+      "name": "services.servicio-polizas-gmm",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
       "name": "services.url-consultar-all-imagenes",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
+      "name": "services.url-consultar-imagen-perfil",
       "type": "java.lang.String",
       "sourceType": "mx.com.allianz.config.ServicesConfiguration"
     },

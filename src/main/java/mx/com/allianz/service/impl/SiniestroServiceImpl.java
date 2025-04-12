@@ -1,9 +1,7 @@
-package mx.com.allianz.service;
+package mx.com.allianz.service.impl;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +17,7 @@ import mx.com.allianz.commons.model.RespuestaGenerica;
 import mx.com.allianz.config.ServicesConfiguration;
 import mx.com.allianz.exception.BusinessException;
 import mx.com.allianz.model.UsuarioRequestModel;
+import mx.com.allianz.service.ISiniestroService;
 
 @Service
 public class SiniestroServiceImpl implements ISiniestroService {

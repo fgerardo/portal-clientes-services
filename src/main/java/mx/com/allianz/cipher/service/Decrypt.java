@@ -8,36 +8,13 @@
 
 package mx.com.allianz.cipher.service;
 
-import jakarta.xml.bind.annotation.XmlAccessType;
-import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlType;
 
-
-/**
- * <p>Clase Java para decrypt complex type.
- * 
- * <p>El siguiente fragmento de esquema especifica el contenido que se espera que haya en esta clase.
- * 
- * <pre>
- * &lt;complexType name="decrypt"&gt;
- *   &lt;complexContent&gt;
- *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
- *       &lt;sequence&gt;
- *         &lt;element name="inCryptText" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
- *       &lt;/sequence&gt;
- *     &lt;/restriction&gt;
- *   &lt;/complexContent&gt;
- * &lt;/complexType&gt;
- * </pre>
- * 
- * 
- */
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "decrypt", propOrder = {
-    "inCryptText"
-})
-@XmlRootElement(name = "decrypt")
+@XmlType(name = "decrypt", namespace = "http://service.ws.security.commons.az.habil.com", propOrder = {
+	    "inCryptText"
+	})
+	@XmlRootElement(name = "decrypt", namespace = "http://service.ws.security.commons.az.habil.com")
 public class Decrypt {
 
     protected String inCryptText;

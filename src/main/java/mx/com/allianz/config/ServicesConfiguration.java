@@ -17,6 +17,12 @@ public class ServicesConfiguration {
 	private String servicioEstatusSiniestroEmail;
 	private String usuarioAuthorizationServices;
 	private String passworAuthorizationServices;
+	private String consultarServicioUsuarioEmail;
+	private String securityLoginContratante;
+	private String servicioPolizas;
+	private String servicioPolizasGmm;
+
+	private String urlConsultarImagenPerfil;
 
 	public String getServicioLogin() {
 		return servicioLogin;
@@ -96,6 +102,46 @@ public class ServicesConfiguration {
 
 	public void setPassworAuthorizationServices(String passworAuthorizationServices) {
 		this.passworAuthorizationServices = passworAuthorizationServices;
+	}
+
+	public String getConsultarServicioUsuarioEmail() {
+		return consultarServicioUsuarioEmail;
+	}
+
+	public void setConsultarServicioUsuarioEmail(String consultarServicioUsuarioEmail) {
+		this.consultarServicioUsuarioEmail = consultarServicioUsuarioEmail;
+	}
+
+	public String getSecurityLoginContratante() {
+		return securityLoginContratante;
+	}
+
+	public void setSecurityLoginContratante(String securityLoginContratante) {
+		this.securityLoginContratante = securityLoginContratante;
+	}
+
+	public String getServicioPolizas() {
+		return servicioPolizas;
+	}
+
+	public void setServicioPolizas(String servicioPolizas) {
+		this.servicioPolizas = servicioPolizas;
+	}
+
+	public String getServicioPolizasGmm() {
+		return servicioPolizasGmm;
+	}
+
+	public void setServicioPolizasGmm(String servicioPolizasGmm) {
+		this.servicioPolizasGmm = servicioPolizasGmm;
+	}
+
+	public String getUrlConsultarImagenPerfil() {
+		return urlConsultarImagenPerfil;
+	}
+
+	public void setUrlConsultarImagenPerfil(String urlConsultarImagenPerfil) {
+		this.urlConsultarImagenPerfil = urlConsultarImagenPerfil;
 	}
 
 }
