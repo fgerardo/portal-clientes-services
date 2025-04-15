@@ -10,7 +10,7 @@ public class Contratante implements Serializable {
 	 * Serializador
 	 */
 	private static final long serialVersionUID = -5805917788529547989L;
-    @JsonProperty("IdCliente")
+	@JsonProperty("IdCliente")
 	public String idCliente;
 	@JsonProperty("CodCliIntegrador")
 	public String codCliIntegrador;
@@ -38,6 +38,8 @@ public class Contratante implements Serializable {
 	public String telParticular;
 	@JsonProperty("TelCelular")
 	public String telCelular;
+	@JsonProperty("TelOficina")
+	public String TelOficina;
 	@JsonProperty("DomicilioCompleto")
 	public String domicilioCompleto;
 	@JsonProperty("Calle")
@@ -71,6 +73,7 @@ public class Contratante implements Serializable {
 	public String _id;
 	@JsonProperty("Contratante")
 	public Contratante contratante;
+	private String apellidos;
 
 	public String getIdCliente() {
 		return idCliente;
@@ -78,6 +81,14 @@ public class Contratante implements Serializable {
 
 	public void setIdCliente(String idCliente) {
 		this.idCliente = idCliente;
+	}
+
+	public String getTelOficina() {
+		return TelOficina;
+	}
+
+	public void setTelOficina(String telOficina) {
+		TelOficina = telOficina;
 	}
 
 	public String getCodCliIntegrador() {
@@ -320,19 +331,28 @@ public class Contratante implements Serializable {
 		this.contratante = contratante;
 	}
 
+	public String getApellidos() {
+		return apellidos;
+	}
+
+	public void setApellidos(String apellidos) {
+		this.apellidos = apellidos;
+	}
+
 	@Override
 	public String toString() {
 		return "Contratante [idCliente=" + idCliente + ", codCliIntegrador=" + codCliIntegrador + ", tipoPersona="
 				+ tipoPersona + ", sexoPersona=" + sexoPersona + ", rFC=" + rFC + ", nombreCompleto=" + nombreCompleto
 				+ ", nombre=" + nombre + ", apellidoPaterno=" + apellidoPaterno + ", apellidoMaterno=" + apellidoMaterno
 				+ ", fechaAntiguedad=" + fechaAntiguedad + ", fechaNacimiento=" + fechaNacimiento + ", email=" + email
-				+ ", telParticular=" + telParticular + ", telCelular=" + telCelular + ", domicilioCompleto="
-				+ domicilioCompleto + ", calle=" + calle + ", numExterior=" + numExterior + ", numInterior="
-				+ numInterior + ", colonia=" + colonia + ", municipio=" + municipio + ", estado=" + estado
-				+ ", codigoPostal=" + codigoPostal + ", pais=" + pais + ", fechaUltimaActualizacion="
+				+ ", telParticular=" + telParticular + ", telCelular=" + telCelular + ", TelOficina=" + TelOficina
+				+ ", domicilioCompleto=" + domicilioCompleto + ", calle=" + calle + ", numExterior=" + numExterior
+				+ ", numInterior=" + numInterior + ", colonia=" + colonia + ", municipio=" + municipio + ", estado="
+				+ estado + ", codigoPostal=" + codigoPostal + ", pais=" + pais + ", fechaUltimaActualizacion="
 				+ fechaUltimaActualizacion + ", numCert=" + numCert + ", usApp=" + usApp + ", idClientePoliza="
 				+ idClientePoliza + ", esContratante=" + esContratante + ", iDESCONTRATANTEPOLIZA="
-				+ iDESCONTRATANTEPOLIZA + ", _id=" + _id + ", contratante=" + contratante + "]";
+				+ iDESCONTRATANTEPOLIZA + ", _id=" + _id + ", contratante=" + contratante + ", apellidos=" + apellidos
+				+ "]";
 	}
 
 }

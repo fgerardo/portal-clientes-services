@@ -11,7 +11,7 @@ public class Poliza implements Serializable {
 	 */
 	private static final long serialVersionUID = -416019918272137333L;
 	@JsonProperty("IDEPOL") // Cambié aquí
-	public int iDEPOL;
+	public String iDEPOL;
 	@JsonProperty("Segmento")
 	public String segmento;
 	@JsonProperty("Lob")
@@ -42,9 +42,9 @@ public class Poliza implements Serializable {
 	public String codMoneda;
 	public String mostrarPolizaAgente;
 	@JsonProperty("Cobertura")
-	public ArrayList<Object> cobertura;
+	public ArrayList<Coberturas> cobertura;
 	@JsonProperty("BienAsegurado")
-	public ArrayList<Object> bienAsegurado;
+	public ArrayList<BienAsegurado> bienAsegurado;
 	@JsonProperty("Beneficiario")
 	public ArrayList<Beneficiario> beneficiario;
 	@JsonProperty("LeyendaMosaico")
@@ -56,7 +56,7 @@ public class Poliza implements Serializable {
 	@JsonProperty("Intermediario")
 	public ArrayList<Intermediario> intermediario;
 	@JsonProperty("InmuebleAsegurado")
-	public ArrayList<Object> inmuebleAsegurado;
+	public ArrayList<InmuebleAsegurado> inmuebleAsegurado;
 	@JsonProperty("ResponsablePago")
 	public ArrayList<ResponsablePago> responsablePago;
 	@JsonProperty("EstadoCuenta")
@@ -78,13 +78,23 @@ public class Poliza implements Serializable {
 	public String iDESCONTRATANTEPOLIZA;
 	@JsonProperty("Contratante")
 	public ArrayList<Contratante> contratante;
+	@JsonProperty("Contrato")
+	public String contrato;
 
-	public int getiDEPOL() {
+	public String getiDEPOL() {
 		return iDEPOL;
 	}
 
-	public void setiDEPOL(int iDEPOL) {
+	public void setiDEPOL(String iDEPOL) {
 		this.iDEPOL = iDEPOL;
+	}
+
+	public String getContrato() {
+		return contrato;
+	}
+
+	public void setContrato(String contrato) {
+		this.contrato = contrato;
 	}
 
 	public String getSegmento() {
@@ -207,19 +217,19 @@ public class Poliza implements Serializable {
 		this.mostrarPolizaAgente = mostrarPolizaAgente;
 	}
 
-	public ArrayList<Object> getCobertura() {
+	public ArrayList<Coberturas> getCobertura() {
 		return cobertura;
 	}
 
-	public void setCobertura(ArrayList<Object> cobertura) {
+	public void setCobertura(ArrayList<Coberturas> cobertura) {
 		this.cobertura = cobertura;
 	}
 
-	public ArrayList<Object> getBienAsegurado() {
+	public ArrayList<BienAsegurado> getBienAsegurado() {
 		return bienAsegurado;
 	}
 
-	public void setBienAsegurado(ArrayList<Object> bienAsegurado) {
+	public void setBienAsegurado(ArrayList<BienAsegurado> bienAsegurado) {
 		this.bienAsegurado = bienAsegurado;
 	}
 
@@ -263,11 +273,11 @@ public class Poliza implements Serializable {
 		this.intermediario = intermediario;
 	}
 
-	public ArrayList<Object> getInmuebleAsegurado() {
+	public ArrayList<InmuebleAsegurado> getInmuebleAsegurado() {
 		return inmuebleAsegurado;
 	}
 
-	public void setInmuebleAsegurado(ArrayList<Object> inmuebleAsegurado) {
+	public void setInmuebleAsegurado(ArrayList<InmuebleAsegurado> inmuebleAsegurado) {
 		this.inmuebleAsegurado = inmuebleAsegurado;
 	}
 
@@ -368,11 +378,12 @@ public class Poliza implements Serializable {
 				+ codCondGen + ", codMoneda=" + codMoneda + ", mostrarPolizaAgente=" + mostrarPolizaAgente
 				+ ", cobertura=" + cobertura + ", bienAsegurado=" + bienAsegurado + ", beneficiario=" + beneficiario
 				+ ", leyendaMosaico=" + leyendaMosaico + ", fondo=" + fondo + ", asegurado=" + asegurado
-				+ ", intermediario=" + intermediario + ", inmuebleAsegurado=" + inmuebleAsegurado + ", estadoCuenta="
-				+ estadoCuenta + ", numeroSolicitud=" + numeroSolicitud + ", vehiculo=" + vehiculo + ", numCert="
-				+ numCert + ", iDEPOL_NUMCERT=" + iDEPOL_NUMCERT + ", iDEPOL_NUMCERT_USAPP=" + iDEPOL_NUMCERT_USAPP
-				+ ", iDCLIENTE_POLIZA=" + iDCLIENTE_POLIZA + ", esContratante=" + esContratante
-				+ ", iDESCONTRATANTEPOLIZA=" + iDESCONTRATANTEPOLIZA + ", contratante=" + contratante + "]";
+				+ ", intermediario=" + intermediario + ", inmuebleAsegurado=" + inmuebleAsegurado + ", responsablePago="
+				+ responsablePago + ", estadoCuenta=" + estadoCuenta + ", numeroSolicitud=" + numeroSolicitud
+				+ ", vehiculo=" + vehiculo + ", numCert=" + numCert + ", iDEPOL_NUMCERT=" + iDEPOL_NUMCERT
+				+ ", iDEPOL_NUMCERT_USAPP=" + iDEPOL_NUMCERT_USAPP + ", iDCLIENTE_POLIZA=" + iDCLIENTE_POLIZA
+				+ ", esContratante=" + esContratante + ", iDESCONTRATANTEPOLIZA=" + iDESCONTRATANTEPOLIZA
+				+ ", contratante=" + contratante + ", contrato=" + contrato + "]";
 	}
 
 }

@@ -24,6 +24,11 @@ public class CoberturaAsegurado implements Serializable {
 	public String estatus;
 	@JsonProperty("CodCli")
 	public String codCli;
+	@JsonProperty("IDEPOL_CODCLI")
+	public String IDEPOL_CODCLI;
+
+	@JsonProperty("SumaAsegCobDesc")
+	public String sumaAsegCobDesc;
 
 	public int getIdCobertura() {
 		return idCobertura;
@@ -51,6 +56,22 @@ public class CoberturaAsegurado implements Serializable {
 
 	public String getFechaIniVig() {
 		return fechaIniVig;
+	}
+
+	public String getIDEPOL_CODCLI() {
+		return IDEPOL_CODCLI;
+	}
+
+	public void setIDEPOL_CODCLI(String iDEPOL_CODCLI) {
+		IDEPOL_CODCLI = iDEPOL_CODCLI;
+	}
+
+	public String getSumaAsegCobDesc() {
+		return sumaAsegCobDesc;
+	}
+
+	public void setSumaAsegCobDesc(String sumaAsegCobDesc) {
+		this.sumaAsegCobDesc = sumaAsegCobDesc;
 	}
 
 	public void setFechaIniVig(String fechaIniVig) {
@@ -85,7 +106,8 @@ public class CoberturaAsegurado implements Serializable {
 	public String toString() {
 		return "CoberturaAsegurado [idCobertura=" + idCobertura + ", descCobertura=" + descCobertura + ", sumaAsegCob="
 				+ sumaAsegCob + ", fechaIniVig=" + fechaIniVig + ", fechaFinVig=" + fechaFinVig + ", estatus=" + estatus
-				+ ", codCli=" + codCli + "]";
+				+ ", codCli=" + codCli + ", IDEPOL_CODCLI=" + IDEPOL_CODCLI + ", sumaAsegCobDesc=" + sumaAsegCobDesc
+				+ "]";
 	}
 
 }

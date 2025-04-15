@@ -13,6 +13,8 @@ public class LeyendaMosaico implements Serializable {
 	public String etiqueta;
 	@JsonProperty("Valor")
 	public String valor;
+	@JsonProperty("Monto")
+	public String monto;
 
 	public String getEtiqueta() {
 		return etiqueta;
@@ -30,9 +32,17 @@ public class LeyendaMosaico implements Serializable {
 		this.valor = valor;
 	}
 
+	public String getMonto() {
+		return monto;
+	}
+
+	public void setMonto(String monto) {
+		this.monto = monto;
+	}
+
 	@Override
 	public String toString() {
-		return "LeyendaMosaico [etiqueta=" + etiqueta + ", valor=" + valor + "]";
+		return "LeyendaMosaico [etiqueta=" + etiqueta + ", valor=" + valor + ", monto=" + monto + "]";
 	}
 
 }
