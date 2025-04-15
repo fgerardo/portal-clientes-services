@@ -9,6 +9,7 @@ public class PolizaModel implements Serializable {
 	 */
 	private static final long serialVersionUID = -4177128448671194321L;
 	private PolizaLimpiaModel poliza;
+	private int orden;
 
 	public PolizaLimpiaModel getPoliza() {
 		return poliza;
@@ -18,9 +19,17 @@ public class PolizaModel implements Serializable {
 		this.poliza = poliza;
 	}
 
+	public int getOrden() {
+		return orden;
+	}
+
+	public void setOrden(int orden) {
+		this.orden = orden;
+	}
+
 	@Override
 	public String toString() {
-		return "PolizaModel [poliza=" + poliza + "]";
+		return "PolizaModel [poliza=" + poliza + ", orden=" + orden + "]";
 	}
 
 }

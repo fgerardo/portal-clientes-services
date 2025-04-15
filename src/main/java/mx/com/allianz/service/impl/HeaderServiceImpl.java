@@ -10,6 +10,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -479,7 +481,11 @@ public class HeaderServiceImpl implements IHeaderService {
 		GeneralesModel procesaModelGeneral = procesaModelGeneral(contratante, nombre, apellidoP, apellidoM, isContra,
 				dataService);
 
-		searchPolizas(dataService, idClientePoliza, contratante, idAgente, respuesta, procesaModelGeneral);
+		List<PolizaModel> searchPolizas = searchPolizas(dataService, idClientePoliza, contratante, idAgente, respuesta,
+				procesaModelGeneral);
+		Gson gson = new Gson();
+		String json = gson.toJson(searchPolizas);
+		log.info("JSON {}", json);
 
 		// Establecer generales si tu response lo soporta
 		response.setGenerales(procesaModelGeneral); // ← Este método debe existir en ResponsePolizaModel
@@ -518,7 +524,7 @@ public class HeaderServiceImpl implements IHeaderService {
 		return generales;
 	}
 
-	private void searchPolizas(Row rows, String idClientePoliza, Contratante contratante, String idAgente,
+	private List<PolizaModel> searchPolizas(Row rows, String idClientePoliza, Contratante contratante, String idAgente,
 			RespuestaPolizaModel respuesta, GeneralesModel generales) {
 		String productosVisiblesPortal = productosConfiguration.getProductosVisiblesPortal();
 		String[] polInhabilesArray = productosVisiblesPortal.isEmpty() ? null : productosVisiblesPortal.split(",");
@@ -536,12 +542,13 @@ public class HeaderServiceImpl implements IHeaderService {
 
 			for (Poliza poliza : polizas) {
 				if (isPolizaInhabiles(poliza, polInhabilesArray)) {
-					procesarPoliza(poliza, respuesta, generales, polizaLimpia, contratante);
+					return procesarPoliza(poliza, respuesta, generales, polizaLimpia, contratante);
 				}
 			}
 
 		} catch (Exception e) {
 		}
+		return null;
 	}
 
 	private void addGMMAseguradosToPolizas(Row rows, ArrayList<Poliza> polizas) {
@@ -559,7 +566,7 @@ public class HeaderServiceImpl implements IHeaderService {
 		return Arrays.asList(polInhabilesArray).contains(emisor);
 	}
 
-	private void procesarPoliza(Poliza poliza, RespuestaPolizaModel respuesta, GeneralesModel generales,
+	private List<PolizaModel> procesarPoliza(Poliza poliza, RespuestaPolizaModel respuesta, GeneralesModel generales,
 			PolizaLimpiaModel polizaLimpia, Contratante contratante) {
 		String emisor = poliza.getEmisor();
 
@@ -598,7 +605,7 @@ public class HeaderServiceImpl implements IHeaderService {
 			handleAdditionalPolicyDetails(poliza, polizaLimpia, emisor);
 		}
 		polizaLimpia.setBeneficiarios(getBeneficiario(poliza.getBeneficiario()));
-		getIdAgente(familia, mostrarPoliza, polizaLimpia);
+		return getIdAgente(familia, mostrarPoliza, polizaLimpia);
 	}
 
 	private InformacionPersonalModel buildInformacionPersonal(Poliza poliza, Contratante contratante,
@@ -1030,7 +1037,7 @@ public class HeaderServiceImpl implements IHeaderService {
 		return beneficiario;
 	}
 
-	private void getIdAgente(String idAgente, boolean mostrarPoliza, PolizaLimpiaModel polizaLimpia) {
+	private List<PolizaModel> getIdAgente(String idAgente, boolean mostrarPoliza, PolizaLimpiaModel polizaLimpia) {
 		PolizaModel poliza = new PolizaModel();
 		List<PolizaModel> polizasLimpias = new ArrayList<>();
 		poliza.setPoliza(polizaLimpia);
@@ -1047,6 +1054,49 @@ public class HeaderServiceImpl implements IHeaderService {
 		} else {
 			polizasLimpias.add(poliza);
 		}
+		return ordenarPolizas(polizasLimpias);
+	}
+
+	public List<PolizaModel> ordenarPolizas(List<PolizaModel> polizas) {
+		// Creamos una lista para ordenar las pólizas
+		List<PolizaModel> polizasOrdenadas = new ArrayList<>(polizas);
+
+		// Ordenamos la lista con un comparator personalizado
+		Collections.sort(polizasOrdenadas, new Comparator<PolizaModel>() {
+			@Override
+			public int compare(PolizaModel a, PolizaModel b) {
+				String valA = a.getPoliza().getGenerales().getNumeroPoliza();
+				String valB = b.getPoliza().getGenerales().getNumeroPoliza();
+
+				// Dividimos el número de póliza para compararlo en varias partes
+				String[] polizaA = valA.split("-");
+				String[] polizaB = valB.split("-");
+
+				// Comparamos primero la parte del año
+				int resultado = polizaA[0].compareToIgnoreCase(polizaB[0]);
+				if (resultado != 0) {
+					return resultado;
+				}
+				// Si el año es el mismo, comparamos la segunda parte (número)
+				resultado = Integer.compare(Integer.parseInt(polizaA[1]), Integer.parseInt(polizaB[1]));
+				if (resultado != 0) {
+					return resultado;
+				}
+				// Si también coinciden, comparamos la última parte
+				return polizaA[2].compareTo(polizaB[2]);
+			}
+		});
+
+		// Asignamos el orden a las pólizas
+		for (int i = 0; i < polizasOrdenadas.size(); i++) {
+			PolizaModel poliza = polizasOrdenadas.get(i);
+			// Suponemos que `setOrden` es un método de PolizaLimpiaModel para almacenar el
+			// orden
+			poliza.setOrden(i + 1);
+		}
+
+		// Retornamos la lista ordenada
+		return polizasOrdenadas;
 	}
 
 }
