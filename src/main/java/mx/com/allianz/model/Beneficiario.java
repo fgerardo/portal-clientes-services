@@ -10,7 +10,7 @@ public class Beneficiario implements Serializable {
 	 * Serializador
 	 */
 	private static final long serialVersionUID = -1011733545405255951L;
-    @JsonProperty("NombreBeneficiario")
+	@JsonProperty("NombreBeneficiario")
 	public String nombreBeneficiario;
 	@JsonProperty("NumBen")
 	public int numBen;
@@ -23,7 +23,7 @@ public class Beneficiario implements Serializable {
 	@JsonProperty("Parentesco")
 	public String parentesco;
 	@JsonProperty("Porcentaje")
-	public double porcentaje;
+	public String porcentaje;
 
 	public String getNombreBeneficiario() {
 		return nombreBeneficiario;
@@ -73,11 +73,11 @@ public class Beneficiario implements Serializable {
 		this.parentesco = parentesco;
 	}
 
-	public double getPorcentaje() {
+	public String getPorcentaje() {
 		return porcentaje;
 	}
 
-	public void setPorcentaje(double porcentaje) {
+	public void setPorcentaje(String porcentaje) {
 		this.porcentaje = porcentaje;
 	}
 

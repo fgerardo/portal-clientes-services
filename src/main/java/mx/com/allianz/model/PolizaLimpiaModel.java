@@ -24,6 +24,9 @@ public class PolizaLimpiaModel implements Serializable {
 	private String urlFolleto;
 	private List<BienAsegurado> bienesAsegurado;
 	private List<InmuebleAseguradoDestino> inmueblesAsegurado;
+	private String colorEmisor;
+	private List<Beneficiario> beneficiarios;
+	private PolizaModel poliza;
 
 	public List<InmuebleAseguradoDestino> getInmueblesAsegurado() {
 		return inmueblesAsegurado;
@@ -129,13 +132,38 @@ public class PolizaLimpiaModel implements Serializable {
 		this.asegurados = asegurados;
 	}
 
+	public String getColorEmisor() {
+		return colorEmisor;
+	}
+
+	public void setColorEmisor(String colorEmisor) {
+		this.colorEmisor = colorEmisor;
+	}
+
+	public List<Beneficiario> getBeneficiarios() {
+		return beneficiarios;
+	}
+
+	public void setBeneficiarios(List<Beneficiario> beneficiarios) {
+		this.beneficiarios = beneficiarios;
+	}
+
+	public PolizaModel getPoliza() {
+		return poliza;
+	}
+
+	public void setPoliza(PolizaModel poliza) {
+		this.poliza = poliza;
+	}
+
 	@Override
 	public String toString() {
 		return "PolizaLimpiaModel [codCondGen=" + codCondGen + ", novedades=" + novedades + ", vehiculo=" + vehiculo
 				+ ", generales=" + generales + ", contratante=" + contratante + ", informacionPersonal="
 				+ informacionPersonal + ", familiaColor=" + familiaColor + ", asegurados=" + asegurados
 				+ ", coberturas=" + coberturas + ", claveAgente=" + claveAgente + ", urlFolleto=" + urlFolleto
-				+ ", bienesAsegurado=" + bienesAsegurado + ", inmueblesAsegurado=" + inmueblesAsegurado + "]";
+				+ ", bienesAsegurado=" + bienesAsegurado + ", inmueblesAsegurado=" + inmueblesAsegurado
+				+ ", colorEmisor=" + colorEmisor + ", beneficiarios=" + beneficiarios + ", poliza=" + poliza + "]";
 	}
 
 }

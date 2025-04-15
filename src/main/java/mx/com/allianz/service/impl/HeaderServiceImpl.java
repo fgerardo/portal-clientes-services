@@ -3,7 +3,10 @@ package mx.com.allianz.service.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -34,6 +37,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 
+import io.micrometer.common.util.StringUtils;
 import mx.com.allianz.cipher.service.Decrypt;
 import mx.com.allianz.cipher.service.DecryptResponse;
 import mx.com.allianz.client.SoapClient;
@@ -44,6 +48,7 @@ import mx.com.allianz.config.ServicesConfiguration;
 import mx.com.allianz.exception.BusinessException;
 import mx.com.allianz.exception.DataAccessException;
 import mx.com.allianz.model.Asegurado;
+import mx.com.allianz.model.Beneficiario;
 import mx.com.allianz.model.BienAsegurado;
 import mx.com.allianz.model.CoberturaAsegurado;
 import mx.com.allianz.model.CoberturaBien;
@@ -64,6 +69,7 @@ import mx.com.allianz.model.LeyendaMosaico;
 import mx.com.allianz.model.ParametroRequestModel;
 import mx.com.allianz.model.Poliza;
 import mx.com.allianz.model.PolizaLimpiaModel;
+import mx.com.allianz.model.PolizaModel;
 import mx.com.allianz.model.Producto;
 import mx.com.allianz.model.ProductosConfiguracionModel;
 import mx.com.allianz.model.ResponsablePago;
@@ -79,7 +85,7 @@ import mx.com.allianz.util.FolletoProductoUtil;
 import mx.com.allianz.util.FormatosUtil;
 import mx.com.allianz.util.GrupoDePolizasHardCode;
 import mx.com.allianz.util.ImagenPerfilUtil;
-import mx.com.allianz.util.JSONFactoryUtil;
+import mx.com.allianz.util.TramitesUtility;
 
 @Service
 public class HeaderServiceImpl implements IHeaderService {
@@ -161,6 +167,8 @@ public class HeaderServiceImpl implements IHeaderService {
 			}
 			responseHeader.setCodCliIntegrador(codeSend);
 			String polizas = getPolizas(codeSend, idAgente, isContratante, emailURL);
+
+			log.info("POlizas {}", polizas);
 
 		} catch (Exception e) {
 			// TODO: handle exception
@@ -361,7 +369,11 @@ public class HeaderServiceImpl implements IHeaderService {
 		try {
 			String encodedAuth = encodedAuth();
 			// Crear la URL de conexión
-			URL urlWeb = new URL(url);
+			URI uri = new URI(url);
+
+			// Convert URI to URL
+			URL urlWeb = uri.toURL();
+
 			HttpURLConnection urlConnection = (HttpURLConnection) urlWeb.openConnection();
 			urlConnection.setRequestProperty("Authorization", "Basic " + encodedAuth);
 
@@ -380,7 +392,7 @@ public class HeaderServiceImpl implements IHeaderService {
 				// Manejar el caso de error en la solicitud
 				log.error("Error en la solicitud. Código de estado: {}", status);
 			}
-		} catch (IOException e) {
+		} catch (IOException | URISyntaxException e) {
 			log.error("Error al realizar la solicitud: {}", e.getMessage());
 		}
 		return res; // Regresar el objeto Root deserializado
@@ -389,7 +401,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	private void resultadoPolizas(ArrayList<Row> rows, boolean isContra, String idAgente) {
 		if (rows != null && rows.size() > 0) {
 			ArrayList<Poliza> dataService = null;
-			Poliza resultadoPoliza = new Poliza();
+//			Poliza resultadoPoliza = new Poliza();
 
 			// Iterar a través de la lista solo hasta encontrar el primer Contratante válido
 			for (int y = 0; y < rows.size(); y++) {
@@ -408,7 +420,7 @@ public class HeaderServiceImpl implements IHeaderService {
 			if (dataService != null) {
 				// Procesar el JSONObject
 				log.info("dataService encontrado: " + dataService.toString());
-				resultadoPoliza = dataService.get(0);
+//				resultadoPoliza = dataService.get(0);
 				procesarPolizas(rows, isContra, idAgente);
 			} else {
 				log.warn("No se encontró un Contratante válido.");
@@ -467,16 +479,7 @@ public class HeaderServiceImpl implements IHeaderService {
 		GeneralesModel procesaModelGeneral = procesaModelGeneral(contratante, nombre, apellidoP, apellidoM, isContra,
 				dataService);
 
-		searhPolizas(dataService, idClientePoliza, contratante, idAgente, respuesta, procesaModelGeneral);
-//		polizas.addAll(dataService.getPolizas());
-
-//		if (dataService.getPolizasGMMAsegurado() != null) {
-//			for (Object o : dataService.getPolizasGMMAsegurado()) {
-//				if (o instanceof Poliza) {
-//					polizas.add((Poliza) o);
-//				}
-//			}
-//		}
+		searchPolizas(dataService, idClientePoliza, contratante, idAgente, respuesta, procesaModelGeneral);
 
 		// Establecer generales si tu response lo soporta
 		response.setGenerales(procesaModelGeneral); // ← Este método debe existir en ResponsePolizaModel
@@ -515,141 +518,141 @@ public class HeaderServiceImpl implements IHeaderService {
 		return generales;
 	}
 
-	private void searhPolizas(Row rows, String idClientePoliza, Contratante contratante, String idAgente,
+	private void searchPolizas(Row rows, String idClientePoliza, Contratante contratante, String idAgente,
 			RespuestaPolizaModel respuesta, GeneralesModel generales) {
 		String productosVisiblesPortal = productosConfiguration.getProductosVisiblesPortal();
-		Contratante contratanteL = new Contratante();
-		String[] polInhabilesArray = null;
+		String[] polInhabilesArray = productosVisiblesPortal.isEmpty() ? null : productosVisiblesPortal.split(",");
 		PolizaLimpiaModel polizaLimpia = new PolizaLimpiaModel();
+
 		try {
 			if (rows == null) {
 				throw new DataAccessException(codes.getResponseCode("IGBL004"));
 			}
+
 			ArrayList<Poliza> polizas = rows.getPolizas();
+			if (rows.getPolizasGMMAsegurado() != null) {
+				addGMMAseguradosToPolizas(rows, polizas);
+			}
 
-			for (int i = 0; i < polizas.size(); i++) {
-
-				if (rows.getPolizasGMMAsegurado() != null) {
-					for (Object o : rows.getPolizasGMMAsegurado()) {
-						if (o instanceof Poliza) {
-							polizas.add((Poliza) o);
-						}
-					}
+			for (Poliza poliza : polizas) {
+				if (isPolizaInhabiles(poliza, polInhabilesArray)) {
+					procesarPoliza(poliza, respuesta, generales, polizaLimpia, contratante);
 				}
-				if (productosVisiblesPortal.length() != 0 && productosVisiblesPortal != "") {
-					polInhabilesArray = productosVisiblesPortal.split(",");
-				}
-
-				if (polInhabilesArray != null) {
-					List<String> polInhabilesArray2 = new ArrayList<>(Arrays.asList(polInhabilesArray));
-					String emisor = polizas.get(i).getEmisor();
-					if (polInhabilesArray2.contains(emisor)) {
-						procesarGeneralesEmpresarial(respuesta, polizas.get(i), contratante, generales);
-
-						// Process the product data
-						procesarDatosProductos(generales, polizas.get(i));
-
-						// Set poliza general data
-						polizaLimpia.setCodCondGen(polizas.get(i).getCodCondGen());
-
-						// Handle leyenda mosaico and fondos
-						procesarLeyendaMosaico(generales, polizas.get(i));
-						responsablePago(polizas.get(i), generales);
-
-						// Process fondos data if available
-						if (polizas.get(i).getFondo() != null && !polizas.get(i).getFondo().isEmpty()) {
-							armarDetalleDeSaldo(polizas.get(i));
-						}
-
-						if (!polizas.get(i).getVehiculo().isEmpty()) {
-							polizaLimpia.setVehiculo(polizas.get(i).getVehiculo());
-						}
-
-						generales.setFamiliaPoliza(emisor);
-						generales.setCodMoneda(polizas.get(i).getCodMoneda());
-						generales.setFechaTerminoVigencia(FormatosUtil.dateFormat(polizas.get(i).getFecIniVig()));
-						generales.setCaratulaPoliza(
-								"https://projects.invisionapp.com/share/3E9AVYBV9#/screens/204561721");
-						generales.setIDEPOL(polizas.get(i).getiDEPOL() != null ? polizas.get(i).getiDEPOL() : "");
-
-						InformacionPersonalModel informacionPersona = new InformacionPersonalModel();
-						String nombre = "", apellidoP = "", apellidoM = "";
-						if (!polizas.get(i).getContratante().isEmpty() || polizas.get(i).contratante.size() != 0) {
-							Contratante contratanteService = polizas.get(i).getContratante().get(0).getContratante();
-
-							nombre = contratanteService.getNombre();
-							String tipoPersona = contratanteService.getTipoPersona();
-							if (tipoPersona.equalsIgnoreCase("FISICA")) {
-								apellidoP = contratanteService.getApellidoPaterno();
-								apellidoM = contratanteService.getApellidoMaterno();
-							}
-							contratanteL.setNombreCompleto(nombre + " " + apellidoP + " " + apellidoM);
-							String domicilioCompleto = contratanteService.getDomicilioCompleto().replace("\"", "&#34;")
-									.replace("\'", "&#39;");
-							contratanteL.setDomicilioCompleto(domicilioCompleto);
-							contratanteL.setTelParticular(contratanteService.getTelParticular());
-							contratanteL.setEmail(contratanteService.getEmail());
-							contratanteL.setrFC(contratanteService.getrFC());
-							contratanteL.setApellidos(apellidoP + " " + apellidoM);
-							contratanteL.setNombre(nombre);
-
-							polizaLimpia.setContratante(contratanteL);
-
-							informacionPersona
-									.setClienteDesde(FormatosUtil.dateFormat(contratanteService.getFechaAntiguedad()));
-							informacionPersona.setNotificaciones("");
-							informacionPersona.setNombreCliente(nombre + " " + apellidoP + " " + apellidoM);
-						} else {
-							nombre = contratante.getNombre();
-
-							if (contratante.getTipoPersona().equalsIgnoreCase("FISICA")) {
-								apellidoP = contratante.getApellidoPaterno();
-								apellidoM = contratante.getApellidoMaterno();
-							}
-							String domicilioCompleto = contratante.getDomicilioCompleto().replace("\"", "&#34;")
-									.replace("\'", "&#39;");
-							contratanteL.setNombre(nombre + " " + apellidoP + " " + apellidoM);
-							contratanteL.setDomicilioCompleto(domicilioCompleto);
-							contratanteL.setTelParticular(contratante.getTelParticular());
-							contratanteL.setEmail(contratante.getEmail());
-							contratanteL.setrFC(contratante.getrFC());
-							contratanteL.setApellidos(apellidoP + " " + apellidoM);
-							contratanteL.setNombre(nombre);
-
-							polizaLimpia.setContratante(contratanteL);
-
-							informacionPersona
-									.setClienteDesde(FormatosUtil.dateFormat(contratante.getFechaAntiguedad()));
-							informacionPersona.setNotificaciones("");
-							informacionPersona.setNombreCliente(nombre + " " + apellidoP + " " + apellidoM);
-
-						}
-
-						List<Producto> obtenerTodosLosProductos = obtenerTodosLosProductos();
-						polizaLimpia.setInformacionPersonal(informacionPersona);
-						String familia = grupoDePolizasHardCode.setFamilia(emisor, obtenerTodosLosProductos);
-						polizaLimpia.setFamiliaColor(familia);
-						polizaLimpia.setGenerales(generales);
-
-						if ((emisor != "ACTD" || (emisor != "ACTM"))) {
-							polizaLimpia.setAsegurados(getAsegurados(polizas.get(i)));
-							getCoberturas(polizas.get(i), polizaLimpia);
-							getIntermediario(null, polizaLimpia, emisor);
-							polizaLimpia.setBienesAsegurado(getBienesAsegurado(polizas.get(i).getBienAsegurado()));
-							List<InmuebleAseguradoDestino> inmueblesasegurado = getInmueblesasegurado(polizas.get(i).getInmuebleAsegurado());
-							polizaLimpia.setInmueblesAsegurado(inmueblesasegurado);
-						}
-
-					}
-
-				}
-
 			}
 
 		} catch (Exception e) {
-			// TODO: handle exception
+		}
+	}
+
+	private void addGMMAseguradosToPolizas(Row rows, ArrayList<Poliza> polizas) {
+		for (Object o : rows.getPolizasGMMAsegurado()) {
+			if (o instanceof Poliza) {
+				polizas.add((Poliza) o);
+			}
+		}
+	}
+
+	private boolean isPolizaInhabiles(Poliza poliza, String[] polInhabilesArray) {
+		if (polInhabilesArray == null)
+			return false;
+		String emisor = poliza.getEmisor();
+		return Arrays.asList(polInhabilesArray).contains(emisor);
+	}
+
+	private void procesarPoliza(Poliza poliza, RespuestaPolizaModel respuesta, GeneralesModel generales,
+			PolizaLimpiaModel polizaLimpia, Contratante contratante) {
+		String emisor = poliza.getEmisor();
+
+		procesarGeneralesEmpresarial(respuesta, poliza, contratante, generales);
+
+		procesarDatosProductos(generales, poliza);
+		boolean mostrarPoliza = poliza.getMostrarPolizaAgente().equals("S") ? true : false;
+
+		polizaLimpia.setCodCondGen(poliza.getCodCondGen());
+
+		procesarLeyendaMosaico(generales, poliza);
+		responsablePago(poliza, generales);
+
+		if (!poliza.getFondo().isEmpty()) {
+			armarDetalleDeSaldo(poliza);
 		}
 
+		if (!poliza.getVehiculo().isEmpty()) {
+			polizaLimpia.setVehiculo(poliza.getVehiculo());
+		}
+
+		generales.setFamiliaPoliza(emisor);
+		generales.setCodMoneda(poliza.getCodMoneda());
+		generales.setFechaTerminoVigencia(FormatosUtil.dateFormat(poliza.getFecIniVig()));
+		generales.setCaratulaPoliza("https://projects.invisionapp.com/share/3E9AVYBV9#/screens/204561721");
+		generales.setIDEPOL(poliza.getiDEPOL() != null ? poliza.getiDEPOL() : "");
+
+		InformacionPersonalModel informacionPersona = buildInformacionPersonal(poliza, contratante, polizaLimpia);
+		polizaLimpia.setInformacionPersonal(informacionPersona);
+
+		String familia = grupoDePolizasHardCode.setFamilia(emisor, obtenerTodosLosProductos());
+		polizaLimpia.setFamiliaColor(familia);
+		polizaLimpia.setGenerales(generales);
+
+		if (!isExcludedEmisor(emisor)) {
+			handleAdditionalPolicyDetails(poliza, polizaLimpia, emisor);
+		}
+		polizaLimpia.setBeneficiarios(getBeneficiario(poliza.getBeneficiario()));
+		getIdAgente(familia, mostrarPoliza, polizaLimpia);
+	}
+
+	private InformacionPersonalModel buildInformacionPersonal(Poliza poliza, Contratante contratante,
+			PolizaLimpiaModel polizaLimpia) {
+		InformacionPersonalModel informacionPersona = new InformacionPersonalModel();
+		Contratante contratanteService = getContratanteService(poliza, contratante);
+
+		String nombre = contratanteService.getNombre();
+		String apellidoP = contratanteService.getApellidoPaterno();
+		String apellidoM = contratanteService.getApellidoMaterno();
+		Contratante contratanteL = new Contratante();
+
+		contratanteL.setNombre(nombre + " " + apellidoP + " " + apellidoM);
+		contratanteL.setDomicilioCompleto(
+				contratanteService.getDomicilioCompleto().replace("\"", "&#34;").replace("\'", "&#39;"));
+		contratanteL.setTelParticular(contratanteService.getTelParticular());
+		contratanteL.setEmail(contratanteService.getEmail());
+		contratanteL.setrFC(contratanteService.getrFC());
+		contratanteL.setApellidos(apellidoP + " " + apellidoM);
+		contratanteL.setNombre(nombre);
+
+		polizaLimpia.setContratante(contratanteL);
+
+		informacionPersona.setClienteDesde(FormatosUtil.dateFormat(contratanteService.getFechaAntiguedad()));
+		informacionPersona.setNotificaciones("");
+		informacionPersona.setNombreCliente(nombre + " " + apellidoP + " " + apellidoM);
+
+		return informacionPersona;
+	}
+
+	private Contratante getContratanteService(Poliza poliza, Contratante contratante) {
+		if (!poliza.getContratante().isEmpty()) {
+			return poliza.getContratante().get(0).getContratante();
+		}
+		return contratante;
+	}
+
+	private boolean isExcludedEmisor(String emisor) {
+		return "ACTD".equals(emisor) || "ACTM".equals(emisor);
+	}
+
+	private void handleAdditionalPolicyDetails(Poliza poliza, PolizaLimpiaModel polizaLimpia, String emisor) {
+		polizaLimpia.setAsegurados(getAsegurados(poliza));
+		getCoberturas(poliza, polizaLimpia);
+		getIntermediario(null, polizaLimpia, emisor);
+		polizaLimpia.setBienesAsegurado(getBienesAsegurado(poliza.getBienAsegurado()));
+
+		List<InmuebleAseguradoDestino> inmueblesasegurado = getInmueblesasegurado(poliza.getInmuebleAsegurado());
+		polizaLimpia.setInmueblesAsegurado(inmueblesasegurado);
+
+		String obtenerColor = grupoDePolizasHardCode.obtenerColor(emisor, obtenerTodosLosProductos());
+		if (obtenerColor != null) {
+			polizaLimpia.setColorEmisor(obtenerColor);
+		}
 	}
 
 	private List<Producto> obtenerTodosLosProductos() {
@@ -664,7 +667,6 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private void procesarDatosProductos(GeneralesModel generales, Poliza polizas) {
-		boolean mostrarPoliza = polizas.getMostrarPolizaAgente().equals("S") ? true : false;
 		generales.setEsContratante(
 				polizas.getEsContratante() != null && polizas.getEsContratante().equals("S") ? true : false);
 		generales.setFolletoProducto("https://projects.invisionapp.com/share/3E9AVYBV9#/screens/204561721");
@@ -968,6 +970,83 @@ public class HeaderServiceImpl implements IHeaderService {
 			}
 		}
 		return inmueblesAseguradoDestino;
+	}
+
+	private List<Beneficiario> getBeneficiario(List<Beneficiario> beneficiarioPorPoliza) {
+		List<Beneficiario> listaBeneficiarios = new ArrayList<>();
+
+		if (!beneficiarioPorPoliza.isEmpty()) {
+			for (Beneficiario beneficiarioItem : beneficiarioPorPoliza) {
+				Beneficiario beneficiario = createBeneficiario(beneficiarioItem);
+				listaBeneficiarios.add(beneficiario);
+			}
+		} else {
+			// Si la lista está vacía, agregar un beneficiario vacío
+			listaBeneficiarios.add(createEmptyBeneficiario());
+		}
+
+		return listaBeneficiarios;
+	}
+
+	private Beneficiario createBeneficiario(Beneficiario beneficiarioItem) {
+		Beneficiario beneficiario = new Beneficiario();
+
+		beneficiario.setNombreBeneficiario(beneficiarioItem.getNombreBeneficiario());
+		beneficiario.setParentesco(getParentesco(beneficiarioItem));
+		beneficiario.setPorcentaje(getPorcentaje(beneficiarioItem));
+
+		return beneficiario;
+	}
+
+	private String getParentesco(Beneficiario beneficiarioItem) {
+		String parentesco = beneficiarioItem.getParentesco();
+		return StringUtils.isEmpty(parentesco) ? "PARENTESCO" : parentesco;
+	}
+
+	private String getPorcentaje(Beneficiario beneficiarioItem) {
+		String porcentaje = beneficiarioItem.getPorcentaje(); // Now a double
+		if (StringUtils.isEmpty(porcentaje)) {
+			return "PORCENTAJE";
+		} else {
+			return formatPorcentaje(String.valueOf(porcentaje)); // Convert double to String
+		}
+	}
+
+	private String formatPorcentaje(String porcentaje) {
+		try {
+			double porcentajeDouble = Double.parseDouble(porcentaje);
+			return new DecimalFormat("#,###").format(porcentajeDouble) + " %";
+		} catch (NumberFormatException e) {
+			// Manejo de errores si el porcentaje no se puede convertir a Double
+			return "PORCENTAJE";
+		}
+	}
+
+	private Beneficiario createEmptyBeneficiario() {
+		Beneficiario beneficiario = new Beneficiario();
+		beneficiario.setNombreBeneficiario(""); // O lo que sea necesario por defecto
+		beneficiario.setParentesco("PARENTESCO");
+		beneficiario.setPorcentaje("PORCENTAJE");
+		return beneficiario;
+	}
+
+	private void getIdAgente(String idAgente, boolean mostrarPoliza, PolizaLimpiaModel polizaLimpia) {
+		PolizaModel poliza = new PolizaModel();
+		List<PolizaModel> polizasLimpias = new ArrayList<>();
+		poliza.setPoliza(polizaLimpia);
+		if (idAgente != null && idAgente.length() > 0 && TramitesUtility.esNumerico(idAgente)) {
+			if (mostrarPoliza) {
+				idAgente = (idAgente.length() == 8) ? idAgente.substring(2, idAgente.length()) : idAgente;
+				String idAgentePoliza = polizaLimpia.getClaveAgente();
+				idAgentePoliza = (idAgentePoliza.length() == 8) ? idAgentePoliza.substring(2, idAgentePoliza.length())
+						: idAgentePoliza;
+				if (idAgente.equalsIgnoreCase(idAgentePoliza)) {
+					polizasLimpias.add(poliza);
+				}
+			}
+		} else {
+			polizasLimpias.add(poliza);
+		}
 	}
 
 }
