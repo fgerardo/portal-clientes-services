@@ -21,6 +21,7 @@ public class ServicesConfiguration {
 	private String securityLoginContratante;
 	private String servicioPolizas;
 	private String servicioPolizasGmm;
+	private String urlConsultarNotificacion;
 
 	private String urlConsultarImagenPerfil;
 
@@ -142,6 +143,14 @@ public class ServicesConfiguration {
 
 	public void setUrlConsultarImagenPerfil(String urlConsultarImagenPerfil) {
 		this.urlConsultarImagenPerfil = urlConsultarImagenPerfil;
+	}
+
+	public String getUrlConsultarNotificacion() {
+		return urlConsultarNotificacion;
+	}
+
+	public void setUrlConsultarNotificacion(String urlConsultarNotificacion) {
+		this.urlConsultarNotificacion = urlConsultarNotificacion;
 	}
 
 }

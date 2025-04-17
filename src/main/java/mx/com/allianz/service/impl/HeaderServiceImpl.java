@@ -2,10 +2,13 @@ package mx.com.allianz.service.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +53,7 @@ import mx.com.allianz.config.ProductosConfiguration;
 import mx.com.allianz.config.ServicesConfiguration;
 import mx.com.allianz.exception.BusinessException;
 import mx.com.allianz.exception.DataAccessException;
+import mx.com.allianz.model.AlertasModel;
 import mx.com.allianz.model.Asegurado;
 import mx.com.allianz.model.Beneficiario;
 import mx.com.allianz.model.BienAsegurado;
@@ -57,6 +62,7 @@ import mx.com.allianz.model.CoberturaBien;
 import mx.com.allianz.model.CoberturaInmueble;
 import mx.com.allianz.model.Coberturas;
 import mx.com.allianz.model.CoberturasModel;
+import mx.com.allianz.model.ContenidoModel;
 import mx.com.allianz.model.ContenidoModel.TipoCliente;
 import mx.com.allianz.model.Contratante;
 import mx.com.allianz.model.DatosPago;
@@ -68,12 +74,15 @@ import mx.com.allianz.model.InmuebleAseguradoDestino;
 import mx.com.allianz.model.Intermediario;
 import mx.com.allianz.model.LDAPResponse;
 import mx.com.allianz.model.LeyendaMosaico;
+import mx.com.allianz.model.NotificacionModel;
+import mx.com.allianz.model.Pago;
 import mx.com.allianz.model.ParametroRequestModel;
 import mx.com.allianz.model.Poliza;
 import mx.com.allianz.model.PolizaLimpiaModel;
 import mx.com.allianz.model.PolizaModel;
 import mx.com.allianz.model.Producto;
 import mx.com.allianz.model.ProductosConfiguracionModel;
+import mx.com.allianz.model.ProximosPagos;
 import mx.com.allianz.model.ResponsablePago;
 import mx.com.allianz.model.ResponseGenerica;
 import mx.com.allianz.model.ResponseHeaderModel;
@@ -83,10 +92,13 @@ import mx.com.allianz.model.Root;
 import mx.com.allianz.model.Row;
 import mx.com.allianz.service.IHeaderService;
 import mx.com.allianz.util.DetalleDeSaldo;
+import mx.com.allianz.util.FiltradoAgenteUtil;
 import mx.com.allianz.util.FolletoProductoUtil;
 import mx.com.allianz.util.FormatosUtil;
 import mx.com.allianz.util.GrupoDePolizasHardCode;
 import mx.com.allianz.util.ImagenPerfilUtil;
+import mx.com.allianz.util.JSONFactoryUtil;
+import mx.com.allianz.util.NotificacionesImpl;
 import mx.com.allianz.util.TramitesUtility;
 
 @Service
@@ -104,6 +116,14 @@ public class HeaderServiceImpl implements IHeaderService {
 
 	@Autowired
 	private FolletoProductoUtil folletoProductoUtil;
+
+	@Autowired
+	private NotificacionesImpl notificacionImpl;
+
+	@Autowired
+	private FiltradoAgenteUtil filtradoUtil;
+
+	private DetalleDeSaldo detalleDeSaldoObj;
 
 	@Autowired
 	private SoapClient soapClient;
@@ -124,15 +144,17 @@ public class HeaderServiceImpl implements IHeaderService {
 
 	@Override
 	public RespuestaGenerica procesarHeader(ParametroRequestModel request) throws BusinessException {
+		log.info("Entro metodo procesarHeader");
 		ResponseHeaderModel responseHeader = new ResponseHeaderModel();
 		try {
-			String idUsuario = "";
-			String codeSend = "";
-			// Desencriptar parámetros recibidos
 			String urlDecript = decryptRequest(request.getParametro());
+			String[] parametrosArreglo = extractParameters(urlDecript);
+
+			String idUsuario = extractIdUsuario(parametrosArreglo[0]);
+			String emailURL = extractParameterValue(parametrosArreglo, 3);
 
 			// Extraer parámetros de la URL desencriptada
-			String[] parametrosArreglo = extractParameters(urlDecript);
+
 			String parValor = parametrosArreglo[0];
 			int separador = parValor.lastIndexOf("=");
 
@@ -140,45 +162,46 @@ public class HeaderServiceImpl implements IHeaderService {
 				idUsuario = parValor.substring(3);
 			}
 
-			String emailURL = parametrosArreglo[3].split("=")[1];
-
 			List<LDAPResponse> ldapClientes = isLDAPClientes(emailURL);
 			log.info("ldapClientes " + ldapClientes);
-
-			String exitsLDAPClientes = exitsLDAPClientes(ldapClientes);
-
-			String codCliente = exitsLDAPClientes != null ? exitsLDAPClientes : idUsuario;
+			String codCliente = Optional.ofNullable(exitsLDAPClientes(ldapClientes)).orElse(idUsuario);
 
 			Map<String, String> clienteInfo = isContratante(codCliente);
-
-			String isContratante = clienteInfo.get("isContratante");
+			boolean isContratante = "s".equalsIgnoreCase(clienteInfo.get("isContratante"));
 			String codCliIntegrador = clienteInfo.get("codCliIntegrador");
 
-			responseHeader.setIsContratante(isContratante.equalsIgnoreCase("s"));
+			String idAgente = urlDecript.contains("idAgente") ? extractParameterValue(parametrosArreglo, 5) : null;
+			String codeSend = codCliIntegrador != null && !codCliIntegrador.isEmpty() ? codCliIntegrador : codCliente;
 
-			String idAgente = null;
-			if (urlDecript.contains("idAgente")) {
-				String claveAgentePar = parametrosArreglo[5];
-				idAgente = claveAgentePar.split("=")[1];
-			}
-
-			if (!(codCliIntegrador.isEmpty())) {
-				codeSend = codCliIntegrador;
-			} else {
-				codeSend = codCliente;
-			}
-			responseHeader.setCodCliIntegrador(codeSend);
 			String polizas = getPolizas(codeSend, idAgente, isContratante, emailURL);
 
+			responseHeader.setCodCliIntegrador(codeSend);
+			responseHeader.setIsContratante(isContratante);
 			log.info("POlizas {}", polizas);
-
+//			return new RespuestaGenerica(true, "OK", responseHeader);
 		} catch (Exception e) {
-			// TODO: handle exception
+			log.error("Error al procesar el header: {}", e.getMessage(), e);
+			throw new BusinessException(codes.getResponseCode("IGBL001"));
 		}
 		return null;
 	}
 
+	private String extractIdUsuario(String parametro) {
+		log.info("Entro metodo extractIdUsuario");
+		int separador = parametro.lastIndexOf("=");
+		return separador > 0 ? parametro.substring(3) : "";
+	}
+
+	private String extractParameterValue(String[] parametros, int index) {
+		log.info("Entro metodo extractParameterValue");
+		if (index < parametros.length && parametros[index].contains("=")) {
+			return parametros[index].split("=")[1];
+		}
+		return "";
+	}
+
 	public List<LDAPResponse> isLDAPClientes(String correoCliente) {
+		log.info("Entro metodo isLDAPClientes {}", correoCliente);
 		List<LDAPResponse> responseList = null;
 		try {
 			HttpHeaders headers = createHeaders();
@@ -209,6 +232,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private String exitsLDAPClientes(List<LDAPResponse> ldapClientes) {
+		log.info("Entro metodo exitsLDAPClientes {}", ldapClientes.get(0).getEmail());
 		// Asegúrate de que la lista no sea nula y tenga al menos un elemento
 		if (ldapClientes == null || ldapClientes.isEmpty()) {
 			return null;
@@ -220,7 +244,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	public Map<String, String> isContratante(String idCliente) {
-		log.info("Metodo isContratante");
+		log.info("Método isContratante llamado con idCliente: {}", idCliente);
 
 		// Mapa de respuesta
 		Map<String, String> responseMap = new HashMap<>();
@@ -230,13 +254,13 @@ public class HeaderServiceImpl implements IHeaderService {
 		String codCliIntegrador = ""; // Inicializar con valor vacío
 
 		try {
-			// Crear los encabezados para la solicitud
-			HttpHeaders headers = createHeaders();
 
 			// Construir la URL con el idCliente
 			String urlServicio = String.format(servicesConfiguration.getSecurityLoginContratante(), idCliente);
-			log.info("Url Servicio --> {}", urlServicio);
+			log.info("Invocando servicio: {}", urlServicio);
 
+			// Crear los encabezados para la solicitud
+			HttpHeaders headers = createHeaders();
 			// Configuración de la solicitud con los headers
 			HttpEntity<String> entity = new HttpEntity<>(headers);
 
@@ -247,46 +271,43 @@ public class HeaderServiceImpl implements IHeaderService {
 			// Obtener la respuesta y acceder a "esContratante"
 			ResponseGenerica respuestaGenerica = responseEntity.getBody();
 
-			if (respuestaGenerica != null && respuestaGenerica.isExitoso()) {
-				// Verificar si el objeto tipoCliente no es null y tiene datos
-				TipoCliente tipoCliente = respuestaGenerica.getContenido().getTipoCliente();
-
-				if (tipoCliente != null) {
-					// Obtener el valor de esContratante
-					esContratante = tipoCliente.getEsContratante();
-
-					// Según el valor de esContratante, asignamos el codCli correspondiente
-					if ("N".equalsIgnoreCase(esContratante)) {
-						codCliIntegrador = tipoCliente.getCodCli();
-					} else {
-						codCliIntegrador = tipoCliente.getCodCliIntegrador();
-					}
-
-					// Log de la respuesta exitosa
-					log.info("Respuesta del servicio isContratante: esContratante={}, codCliIntegrador={}",
-							esContratante, codCliIntegrador);
-				} else {
-					log.warn("El objeto tipoCliente está vacío o no contiene datos.");
-				}
-			} else {
-				log.warn("Respuesta no exitosa del servicio isContratante.");
+			if (respuestaGenerica == null || !respuestaGenerica.isExitoso()) {
+				log.warn("Respuesta del servicio es nula o no exitosa.");
+				putResponseDefaults(responseMap, esContratante, codCliIntegrador);
+				return responseMap;
 			}
 
-			// Almacenamos los valores en el mapa
-			responseMap.put("isContratante", esContratante);
-			responseMap.put("codCliIntegrador", codCliIntegrador);
-		} catch (HttpClientErrorException | HttpServerErrorException e) {
-			// Manejo de excepciones específicas de HTTP
-			log.error("Error al realizar la solicitud HTTP: {}", e.getMessage());
+			TipoCliente tipoCliente = Optional.ofNullable(respuestaGenerica.getContenido())
+					.map(ContenidoModel::getTipoCliente).orElse(null);
+
+			if (tipoCliente == null) {
+				log.warn("El objeto tipoCliente está vacío.");
+				putResponseDefaults(responseMap, esContratante, codCliIntegrador);
+				return responseMap;
+			}
+
+			esContratante = Optional.ofNullable(tipoCliente.getEsContratante()).orElse("N");
+			codCliIntegrador = "N".equalsIgnoreCase(esContratante) ? tipoCliente.getCodCli()
+					: tipoCliente.getCodCliIntegrador();
+
+			log.info("Resultado del servicio isContratante -> esContratante: {}, codCliIntegrador: {}", esContratante,
+					codCliIntegrador);
+
+		} catch (HttpClientErrorException | HttpServerErrorException httpEx) {
+			log.error("Error HTTP al invocar el servicio isContratante: {}", httpEx.getMessage(), httpEx);
 			throw new BusinessException(codes.getResponseCode("IGBL001"));
-		} catch (Exception e) {
-			// Manejo de otras excepciones
-			log.error("Error inesperado al consultar el servicio: {}", e.getMessage());
+		} catch (Exception ex) {
+			log.error("Error inesperado al procesar isContratante: {}", ex.getMessage(), ex);
 			throw new BusinessException(codes.getResponseCode("IGBL001"));
 		}
 
-		// Retornamos el mapa con los valores
+		putResponseDefaults(responseMap, esContratante, codCliIntegrador);
 		return responseMap;
+	}
+
+	private void putResponseDefaults(Map<String, String> responseMap, String esContratante, String codCliIntegrador) {
+		responseMap.put("isContratante", esContratante != null ? esContratante : "N");
+		responseMap.put("codCliIntegrador", codCliIntegrador != null ? codCliIntegrador : "");
 	}
 
 	private HttpHeaders createHeaders() {
@@ -322,180 +343,255 @@ public class HeaderServiceImpl implements IHeaderService {
 		return parametrosJuntos.split("&");
 	}
 
-	private String getPolizas(String idCliente, String idAgente, String isContratante, String mail) {
+	private String getPolizas(String idCliente, String idAgente, boolean isContratante, String mail) {
+		log.info("Metodo getPolizas idCliente: {}, mail: {}", idCliente, mail);
 		try {
-			String servicioWebBase = servicesConfiguration.getServicioPolizas();
-			String servicioWeb = "";
-			boolean isContra = false;
-
-			// Comprobamos que isContratante no sea nulo ni vacío
-			// Verificamos si isContratante no es null ni vacío
-
-			if (isContratante != null && !isContratante.isEmpty()) {
-				if (isContratante.equalsIgnoreCase("n")) {
-					// Si es Contratante "N", usamos el correo (mail) para la consulta
-					if (mail.equalsIgnoreCase("USER")) {
-						// Cuando es "USER", usamos idCliente en la consulta
-						servicioWeb = String.format(servicioWebBase, "$text", "$search\":\"" + idCliente + "\"");
-					} else {
-						// Usamos el correo cuando no es "USER"
-						servicioWeb = String.format(servicioWebBase, "\"Contratante.UsApp\"", "\"" + mail + "\"");
-					}
-				} else if (isContratante.equalsIgnoreCase("s")) {
-					// Si es Contratante "S", usamos idCliente para la búsqueda
-					isContra = true;
-					servicioWeb = String.format(servicioWebBase, "$text", "$search\":\"" + idCliente + "\"");
-				}
-			} else {
-				// Caso cuando isContratante es null o vacío
-				if (mail.equalsIgnoreCase("USER")) {
-					// Cuando es "USER", usamos idCliente
-					servicioWeb = String.format(servicioWebBase, "$text", "$search\":\"" + idCliente + "\"");
-				} else {
-					// Usamos el correo cuando no es "USER"
-					servicioWeb = String.format(servicioWebBase, "\"Contratante.UsApp\"", "\"" + mail + "\"");
-				}
-			}
-
+			String servicioWeb = construirUrlPolizas(idCliente, isContratante, mail);
+			boolean esContratante = isContratante;
 			Root servicesAllianzPoliza = getServicesAllianzPoliza(servicioWeb);
-			resultadoPolizas(servicesAllianzPoliza.getRows(), isContra, idAgente);
-			log.info("Response {}", servicesAllianzPoliza);
+
+			List<PolizaModel> resultadoPolizas = resultadoPolizas(servicesAllianzPoliza.getRows(), esContratante,
+					idAgente, mail);
+			log.info("Respuesta del servicio de pólizas: {}", resultadoPolizas);
+			return "OK";
 		} catch (Exception e) {
-			log.error("Exception {}", e);
+			log.error("Error al obtener pólizas: {}", e.getMessage(), e);
+			throw new BusinessException(codes.getResponseCode("IGBL001"));
 		}
-		return null;
+	}
+
+	private String construirUrlPolizas(String idCliente, boolean isContratante, String mail) {
+		log.info("Metodo construirUrlPolizas");
+		String baseUrl = servicesConfiguration.getServicioPolizas();
+
+		if (isContratante) {
+			// Si es contratante, buscar por idCliente
+			return String.format(baseUrl, "$text", "$search\":\"" + idCliente + "\"");
+		} else {
+			// Si no es contratante
+			if ("USER".equalsIgnoreCase(mail)) {
+				return String.format(baseUrl, "$text", "$search\":\"" + idCliente + "\"");
+			} else {
+				return String.format(baseUrl, "\"Contratante.UsApp\"", "\"" + mail + "\"");
+			}
+		}
 	}
 
 	public Root getServicesAllianzPoliza(String url) {
-		Root res = null;
+		log.info("Metodo getServicesAllianzPoliza {} ", url);
 		try {
 			String encodedAuth = encodedAuth();
-			// Crear la URL de conexión
-			URI uri = new URI(url);
 
-			// Convert URI to URL
+			// Codificar parámetro "where" si es necesario
+			url = encodeWhereParamIfNeeded(url);
+
+			URI uri = new URI(url);
 			URL urlWeb = uri.toURL();
 
-			HttpURLConnection urlConnection = (HttpURLConnection) urlWeb.openConnection();
-			urlConnection.setRequestProperty("Authorization", "Basic " + encodedAuth);
+			HttpURLConnection connection = (HttpURLConnection) urlWeb.openConnection();
+			connection.setRequestProperty("Authorization", "Basic " + encodedAuth);
 
-			// Verificar el código de estado HTTP
-			int status = urlConnection.getResponseCode();
+			int status = connection.getResponseCode();
+
 			if (status == HttpURLConnection.HTTP_OK) {
-				// Leer la respuesta si el código de estado es 200 OK
-				try (InputStream is = urlConnection.getInputStream()) {
+				try (InputStream is = connection.getInputStream()) {
 					// Deserializar directamente desde el InputStream
 					ObjectMapper mapper = new ObjectMapper();
-					res = mapper.readValue(is, Root.class);
+					return mapper.readValue(is, Root.class);
 				} catch (IOException e) {
-					log.error("Error al leer la respuesta: {}", e.getMessage());
+					log.error("Error al deserializar la respuesta JSON: {}", e.getMessage(), e);
+					throw new BusinessException(codes.getResponseCode("IGBL002"));
 				}
 			} else {
-				// Manejar el caso de error en la solicitud
-				log.error("Error en la solicitud. Código de estado: {}", status);
+				log.error("Solicitud fallida. Código HTTP: {}", status);
+				throw new BusinessException(codes.getResponseCode("IGBL003")); // Código HTTP no esperado
 			}
 		} catch (IOException | URISyntaxException e) {
-			log.error("Error al realizar la solicitud: {}", e.getMessage());
+			log.error("Error en la conexión o formato de URL: {}", e.getMessage(), e);
+			throw new BusinessException(codes.getResponseCode("IGBL001")); // Error genérico
 		}
-		return res; // Regresar el objeto Root deserializado
 	}
 
-	private void resultadoPolizas(ArrayList<Row> rows, boolean isContra, String idAgente) {
-		if (rows != null && rows.size() > 0) {
-			ArrayList<Poliza> dataService = null;
-//			Poliza resultadoPoliza = new Poliza();
+	private List<PolizaModel> resultadoPolizas(ArrayList<Row> rows, boolean isContra, String idAgente, String mail) {
 
-			// Iterar a través de la lista solo hasta encontrar el primer Contratante válido
-			for (int y = 0; y < rows.size(); y++) {
-				Row row = rows.get(y); // Mejorar la legibilidad al obtener el objeto Row
-				Contratante contra = row.getContratante(); // Obtener el Contratante
-				String validaContratante = contra != null ? contra.getEsContratante() : null;
-				log.info("validaContratante: " + validaContratante);
+		log.info("Metodo resultadoPolizas");
+		if (rows == null || rows.isEmpty()) {
+			log.warn("La lista de rows está vacía o es nula.");
+			throw new BusinessException(codes.getResponseCode("IGBL004"));
+		}
+		try {
+			List<Poliza> dataService = null;
+			for (Row row : rows) {
+				Contratante contratante = row.getContratante();
+				String esContratante = contratante != null ? contratante.getEsContratante() : null;
 
-				if ("S".equalsIgnoreCase(validaContratante)) { // Usar equalsIgnoreCase para evitar NullPointerException
-					dataService = row.getPolizas(); // Suponiendo que getData() devuelve un JSONObject
-					break; // Salir del loop una vez que encontramos el primer Contratante válido
+				log.debug("Contratante encontrado con estado: {}", esContratante);
+
+				if ("S".equalsIgnoreCase(esContratante)) {
+					dataService = row.getPolizas();
+					break;
 				}
 			}
 
-			// Si no se encuentra un Contratante válido, puedes manejar el caso aquí
-			if (dataService != null) {
-				// Procesar el JSONObject
-				log.info("dataService encontrado: " + dataService.toString());
-//				resultadoPoliza = dataService.get(0);
-				procesarPolizas(rows, isContra, idAgente);
+			if (dataService != null && !dataService.isEmpty()) {
+				log.info("Polizas encontradas para contratante válido: {}", dataService.size());
+				procesarPolizas(rows, isContra, idAgente, mail);
 			} else {
-				log.warn("No se encontró un Contratante válido.");
+				log.warn("No se encontraron pólizas para ningún contratante válido.");
 			}
-		} else {
-			log.warn("La lista de rows está vacía o es nula.");
+
+		} catch (Exception e) {
+			log.error("Error al procesar resultadoPolizas: {}", e.getMessage(), e);
+			throw new BusinessException(codes.getResponseCode("IGBL004"));
 		}
+		return null;
+
 	}
 
-	public ResponsePolizaModel procesarPolizas(ArrayList<Row> rows, boolean isContra, String idAgente) {
-		ResponsePolizaModel response = new ResponsePolizaModel();
+	public List<PolizaModel> procesarPolizas(ArrayList<Row> rows, boolean isContra, String idAgente, String mail) {
+		log.info("Metodo procesarPolizas");
+		List<PolizaModel> poliza = new ArrayList<>();
+		ResponsePolizaModel responsePoliza = new ResponsePolizaModel();
 		RespuestaPolizaModel respuesta = new RespuestaPolizaModel();
+		try {
 
-		if (rows == null || rows.isEmpty()) {
-			response.setEstatus(false);
-			response.setMensaje("No se encontraron datos.");
-			return response;
+			if (rows == null || rows.isEmpty()) {
+				log.warn("No se encontraron datos en la lista de rows.");
+				responsePoliza.setEstatus(false);
+				responsePoliza.setMensaje("No se encontraron datos.");
+				return poliza;
+			}
+
+			// Buscar contratante con EsContratante = "S" o usar el primero
+			Row dataService = rows.stream().filter(row -> row.getContratante() != null)
+					.filter(row -> "S".equalsIgnoreCase(row.getContratante().getEsContratante())).findFirst()
+					.orElse(rows.get(0));
+//FGGG
+			try {
+				List<AlertasModel> notificacionesService = dataService.getAlertas();
+				List<NotificacionModel> obtenerNotificaciones = obtenerNotificaciones(notificacionesService);
+				responsePoliza.setNotificaciones(obtenerNotificaciones);
+			} catch (Exception e) {
+				List<NotificacionModel> notificaciones = new ArrayList<>();
+				NotificacionModel notifi = new NotificacionModel();
+				notifi.setDescripcion("No hay notificaciones disponibles.");
+				notifi.setEstatus("1");
+				notificaciones.add(notifi);
+				responsePoliza.setNotificaciones(notificaciones);
+			}
+
+			Contratante contratante = dataService.getContratante();
+			if (contratante == null) {
+				log.warn("No se encontró información del contratante en el registro seleccionado.");
+				responsePoliza.setEstatus(false);
+				responsePoliza.setMensaje("No se encontró información del contratante.");
+				return poliza;
+			}
+
+			// Datos básicos del contratante
+
+			responsePoliza.setEstatus(true);
+			responsePoliza.setMensaje("JSON Consumido correctamente");
+			responsePoliza.setIdClientePoliza(contratante.getIdCliente());
+			responsePoliza.setRfc(contratante.getrFC());
+
+			String nombre = Optional.ofNullable(contratante.getNombre()).orElse(contratante.getNombreCompleto());
+			String tipoPersona = contratante.getTipoPersona();
+			responsePoliza.setNombre(nombre);
+			responsePoliza.setTipoPersona(tipoPersona);
+
+			String apellidoP = "";
+			String apellidoM = "";
+
+			if ("FISICA".equalsIgnoreCase(tipoPersona)) {
+				apellidoP = contratante.getApellidoPaterno();
+				apellidoM = contratante.getApellidoMaterno();
+			}
+
+			responsePoliza.setApellidoP(apellidoP);
+			responsePoliza.setApellidoM(apellidoM);
+
+			GeneralesModel generales = procesaModelGeneral(contratante, nombre, apellidoP, apellidoM, isContra,
+					dataService);
+
+			poliza = searchPolizas(dataService, contratante.getIdCliente(), contratante, idAgente, respuesta);
+
+			List<String> idepoliciesTitular = new ArrayList<String>();
+			List<String> idepolicies = new ArrayList<String>();
+			List<PolizaModel> polizaTitularTemp = new ArrayList<>();
+			List<PolizaModel> polizaTemp = new ArrayList<>();
+			List<PolizaModel> polizaTempLimpioFinal = new ArrayList<>();
+
+			for (PolizaModel pol : poliza) {
+				String idepol = pol.getPoliza().getGenerales().getIDEPOL();
+
+				if (!idepolicies.contains(idepol)) {
+					idepolicies.add(idepol);
+					polizaTemp.add(pol);
+				}
+
+				if (esTitular(pol, mail) && !idepoliciesTitular.contains(idepol)) {
+					idepoliciesTitular.add(idepol);
+					polizaTitularTemp.add(pol);
+				}
+
+			}
+
+			// Agregar pólizas del titular al resultado final
+			for (PolizaModel pol : polizaTitularTemp) {
+				String idepol = pol.getPoliza().getGenerales().getIDEPOL();
+				if (idepoliciesTitular.contains(idepol)) {
+					polizaTempLimpioFinal.add(pol);
+				}
+			}
+
+			// Agregar pólizas no titular al resultado final
+			for (PolizaModel pol : polizaTemp) {
+				String idepol = pol.getPoliza().getGenerales().getIDEPOL();
+				if (!idepoliciesTitular.contains(idepol)) {
+					polizaTempLimpioFinal.add(pol);
+				}
+			}
+
+			poliza = polizaTempLimpioFinal;
+			String esContratantee = contratante.getEsContratante();
+			log.info("{}", detalleDeSaldoObj.getJsonDetalleDeSaldo());
+			responsePoliza.setDetalleSaldo(detalleDeSaldoObj);
+
+			try {
+				List<AlertasModel> notificacionesService = dataService.getAlertas();
+				List<NotificacionModel> obtenerNotificaciones = obtenerNotificaciones(notificacionesService);
+				responsePoliza.setNotificaciones(obtenerNotificaciones);
+			} catch (Exception e) {
+				List<NotificacionModel> notificaciones = new ArrayList<>();
+				NotificacionModel notifi = new NotificacionModel();
+				notifi.setDescripcion("No hay notificaciones disponibles.");
+				notifi.setEstatus("1");
+				notificaciones.add(notifi);
+				responsePoliza.setNotificaciones(notificaciones);
+			}
+			
+			List<ProximosPagos> proximosPagos = new ArrayList<>();
+			responsePoliza.setProximosPagos(obtenerProximosPagos(proximosPagos, polizaTempLimpioFinal, idAgente));
+			responsePoliza.setGenerales(generales);
+			responsePoliza.setPoliza(poliza);
+			responsePoliza.setEsContratante(esContratantee);
+			responsePoliza.setObtenerJsonFamiliasParaLaRuleta(grupoDePolizasHardCode.obtenerJsonFamiliasParaLaRuleta());
+
+			log.info("Pólizas procesadas: {}", new Gson().toJson(poliza));
+
+		} catch (Exception e) {
+			log.error("Error al procesar pólizas: {}", e.getMessage(), e);
+			responsePoliza.setEstatus(false);
+			responsePoliza.setMensaje("Ocurrió un error al procesar las pólizas.");
 		}
 
-		// Buscar contratante con EsContratante = "S" o usar el primero
-		Row dataService = rows.stream().filter(row -> row.getContratante() != null)
-				.filter(row -> "S".equalsIgnoreCase(row.getContratante().getEsContratante())).findFirst()
-				.orElse(rows.get(0));
-
-		Contratante contratante = dataService.getContratante();
-		if (contratante == null) {
-			response.setEstatus(false);
-			response.setMensaje("No se encontró información del contratante.");
-			return response;
-		}
-
-		// Datos básicos del contratante
-		String idClientePoliza = contratante.getIdCliente();
-		String rfc = contratante.getrFC();
-		response.setEstatus(true);
-		response.setMensaje("JSON Consumido correctamente");
-		response.setIdClientePoliza(idClientePoliza);
-		response.setRfc(rfc);
-
-		String nombre = Optional.ofNullable(contratante.getNombre()).orElse(contratante.getNombreCompleto());
-		String tipoPersona = contratante.getTipoPersona();
-		response.setNombre(nombre);
-		response.setTipoPersona(tipoPersona);
-
-		String apellidoP = "";
-		String apellidoM = "";
-
-		if ("FISICA".equalsIgnoreCase(tipoPersona)) {
-			apellidoP = contratante.getApellidoPaterno();
-			apellidoM = contratante.getApellidoMaterno();
-		}
-
-		response.setApellidoP(apellidoP);
-		response.setApellidoM(apellidoM);
-
-		GeneralesModel procesaModelGeneral = procesaModelGeneral(contratante, nombre, apellidoP, apellidoM, isContra,
-				dataService);
-
-		List<PolizaModel> searchPolizas = searchPolizas(dataService, idClientePoliza, contratante, idAgente, respuesta,
-				procesaModelGeneral);
-		Gson gson = new Gson();
-		String json = gson.toJson(searchPolizas);
-		log.info("JSON {}", json);
-
-		// Establecer generales si tu response lo soporta
-		response.setGenerales(procesaModelGeneral); // ← Este método debe existir en ResponsePolizaModel
-
-		return response;
+		return poliza;
 	}
 
 	private GeneralesModel procesaModelGeneral(Contratante contratante, String nombre, String apellidoP,
 			String apellidoM, boolean isContra, Row dataService) {
-
+		log.info("Metodo procesaModelGeneral");
 		// GeneralesModel para nombreCliente
 		GeneralesModel generales = new GeneralesModel();
 		if (contratante.getNombreCompleto() == null || contratante.getNombreCompleto().isEmpty()) {
@@ -525,10 +621,11 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private List<PolizaModel> searchPolizas(Row rows, String idClientePoliza, Contratante contratante, String idAgente,
-			RespuestaPolizaModel respuesta, GeneralesModel generales) {
+			RespuestaPolizaModel respuesta) {
+		log.info("Metodo searchPolizas");
 		String productosVisiblesPortal = productosConfiguration.getProductosVisiblesPortal();
 		String[] polInhabilesArray = productosVisiblesPortal.isEmpty() ? null : productosVisiblesPortal.split(",");
-		PolizaLimpiaModel polizaLimpia = new PolizaLimpiaModel();
+		PolizaModel procesarPoliza = new PolizaModel();
 
 		try {
 			if (rows == null) {
@@ -540,18 +637,27 @@ public class HeaderServiceImpl implements IHeaderService {
 				addGMMAseguradosToPolizas(rows, polizas);
 			}
 
+			List<PolizaModel> polizasLimpias = new ArrayList<>();
+
 			for (Poliza poliza : polizas) {
+				PolizaLimpiaModel polizaLimpia = new PolizaLimpiaModel();
+				GeneralesModel generales = new GeneralesModel();
 				if (isPolizaInhabiles(poliza, polInhabilesArray)) {
-					return procesarPoliza(poliza, respuesta, generales, polizaLimpia, contratante);
+					procesarPoliza = procesarPoliza(poliza, respuesta, generales, polizaLimpia, contratante);
+					polizasLimpias.add(procesarPoliza);
 				}
 			}
 
+			return ordenarPolizas(polizasLimpias);
+
 		} catch (Exception e) {
+			log.error("Exception {}", e);
 		}
 		return null;
 	}
 
 	private void addGMMAseguradosToPolizas(Row rows, ArrayList<Poliza> polizas) {
+		log.info("Metodo addGMMAseguradosToPolizas");
 		for (Object o : rows.getPolizasGMMAsegurado()) {
 			if (o instanceof Poliza) {
 				polizas.add((Poliza) o);
@@ -560,56 +666,72 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private boolean isPolizaInhabiles(Poliza poliza, String[] polInhabilesArray) {
+		log.info("Metodo isPolizaInhabiles");
 		if (polInhabilesArray == null)
 			return false;
 		String emisor = poliza.getEmisor();
 		return Arrays.asList(polInhabilesArray).contains(emisor);
 	}
 
-	private List<PolizaModel> procesarPoliza(Poliza poliza, RespuestaPolizaModel respuesta, GeneralesModel generales,
+	private PolizaModel procesarPoliza(Poliza poliza, RespuestaPolizaModel respuesta, GeneralesModel generales,
 			PolizaLimpiaModel polizaLimpia, Contratante contratante) {
-		String emisor = poliza.getEmisor();
+		log.info("Metodo procesarPoliza");
+		try {
+			if (poliza == null) {
+				log.warn("El objeto póliza es requeridos es nulo. poliza: {}, contratante: {}", poliza, contratante);
+			}
+			String emisor = Optional.ofNullable(poliza.getEmisor()).orElse("");
+			boolean mostrarPoliza = "S".equalsIgnoreCase(poliza.getMostrarPolizaAgente());
 
-		procesarGeneralesEmpresarial(respuesta, poliza, contratante, generales);
+			procesarGeneralesEmpresarial(respuesta, poliza, contratante, generales);
+			procesarDatosProductos(generales, poliza);
+			procesarLeyendaMosaico(generales, poliza);
+			responsablePago(poliza, generales);
 
-		procesarDatosProductos(generales, poliza);
-		boolean mostrarPoliza = poliza.getMostrarPolizaAgente().equals("S") ? true : false;
+			polizaLimpia.setCodCondGen(poliza.getCodCondGen());
+			if (poliza.getFondo() != null && !poliza.getFondo().isEmpty()) {
+				armarDetalleDeSaldo(poliza);
+			}
 
-		polizaLimpia.setCodCondGen(poliza.getCodCondGen());
+			if (poliza.getVehiculo() != null && !poliza.getVehiculo().isEmpty()) {
+				polizaLimpia.setVehiculo(poliza.getVehiculo());
+			}
 
-		procesarLeyendaMosaico(generales, poliza);
-		responsablePago(poliza, generales);
+			// Datos Generales
+			generales.setFamiliaPoliza(emisor);
+			generales.setCodMoneda(poliza.getCodMoneda());
+			generales.setFechaTerminoVigencia(FormatosUtil.dateFormat(poliza.getFecFinVig()));
+			generales.setCaratulaPoliza("https://projects.invisionapp.com/share/3E9AVYBV9#/screens/204561721");
+			generales.setIDEPOL(Optional.ofNullable(poliza.getiDEPOL()).orElse(""));
 
-		if (!poliza.getFondo().isEmpty()) {
-			armarDetalleDeSaldo(poliza);
+			// Información personal
+			InformacionPersonalModel informacionPersona = buildInformacionPersonal(poliza, contratante, polizaLimpia);
+			polizaLimpia.setInformacionPersonal(informacionPersona);
+
+			// Familia y color
+			String familia = grupoDePolizasHardCode.setFamilia(emisor, obtenerTodosLosProductos());
+			polizaLimpia.setFamiliaColor(familia);
+			polizaLimpia.setGenerales(generales);
+
+			// Agregados por familia
+			if (!isExcludedEmisor(emisor)) {
+				handleAdditionalPolicyDetails(poliza, polizaLimpia, emisor);
+			}
+
+			// Beneficiarios
+			polizaLimpia.setBeneficiarios(getBeneficiario(poliza.getBeneficiario()));
+
+			return getIdAgente(familia, mostrarPoliza, polizaLimpia);
+
+		} catch (Exception ex) {
+			log.error("Error al procesar la póliza: {}", ex.getMessage(), ex);
 		}
-
-		if (!poliza.getVehiculo().isEmpty()) {
-			polizaLimpia.setVehiculo(poliza.getVehiculo());
-		}
-
-		generales.setFamiliaPoliza(emisor);
-		generales.setCodMoneda(poliza.getCodMoneda());
-		generales.setFechaTerminoVigencia(FormatosUtil.dateFormat(poliza.getFecIniVig()));
-		generales.setCaratulaPoliza("https://projects.invisionapp.com/share/3E9AVYBV9#/screens/204561721");
-		generales.setIDEPOL(poliza.getiDEPOL() != null ? poliza.getiDEPOL() : "");
-
-		InformacionPersonalModel informacionPersona = buildInformacionPersonal(poliza, contratante, polizaLimpia);
-		polizaLimpia.setInformacionPersonal(informacionPersona);
-
-		String familia = grupoDePolizasHardCode.setFamilia(emisor, obtenerTodosLosProductos());
-		polizaLimpia.setFamiliaColor(familia);
-		polizaLimpia.setGenerales(generales);
-
-		if (!isExcludedEmisor(emisor)) {
-			handleAdditionalPolicyDetails(poliza, polizaLimpia, emisor);
-		}
-		polizaLimpia.setBeneficiarios(getBeneficiario(poliza.getBeneficiario()));
-		return getIdAgente(familia, mostrarPoliza, polizaLimpia);
+		return null;
 	}
 
 	private InformacionPersonalModel buildInformacionPersonal(Poliza poliza, Contratante contratante,
 			PolizaLimpiaModel polizaLimpia) {
+		log.info("Metodo buildInformacionPersonal");
 		InformacionPersonalModel informacionPersona = new InformacionPersonalModel();
 		Contratante contratanteService = getContratanteService(poliza, contratante);
 
@@ -637,6 +759,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private Contratante getContratanteService(Poliza poliza, Contratante contratante) {
+		log.info("Metodo getContratanteService");
 		if (!poliza.getContratante().isEmpty()) {
 			return poliza.getContratante().get(0).getContratante();
 		}
@@ -644,13 +767,16 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private boolean isExcludedEmisor(String emisor) {
+		log.info("Metodo isExcludedEmisor emiso: {}", emisor);
 		return "ACTD".equals(emisor) || "ACTM".equals(emisor);
 	}
 
 	private void handleAdditionalPolicyDetails(Poliza poliza, PolizaLimpiaModel polizaLimpia, String emisor) {
+		log.info("Metodo handleAdditionalPolicyDetails");
 		polizaLimpia.setAsegurados(getAsegurados(poliza));
+		log.info("JSON POLIZA LIMPIA {}", new Gson().toJson(polizaLimpia));
 		getCoberturas(poliza, polizaLimpia);
-		getIntermediario(null, polizaLimpia, emisor);
+		getIntermediario(poliza, polizaLimpia, emisor);
 		polizaLimpia.setBienesAsegurado(getBienesAsegurado(poliza.getBienAsegurado()));
 
 		List<InmuebleAseguradoDestino> inmueblesasegurado = getInmueblesasegurado(poliza.getInmuebleAsegurado());
@@ -663,6 +789,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private List<Producto> obtenerTodosLosProductos() {
+		log.info("Metodo obtenerTodosLosProductos");
 		ProductosConfiguracionModel productos = new ProductosConfiguracionModel();
 		productos.setFamiliasHogar(productosConfiguration.getProductosHogar());
 		productos.setFamiliasSalud(productosConfiguration.getProductosSalud());
@@ -674,20 +801,21 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private void procesarDatosProductos(GeneralesModel generales, Poliza polizas) {
+		log.info("Metodo procesarDatosProductos");
 		generales.setEsContratante(
 				polizas.getEsContratante() != null && polizas.getEsContratante().equals("S") ? true : false);
 		generales.setFolletoProducto("https://projects.invisionapp.com/share/3E9AVYBV9#/screens/204561721");
 		generales.setNumeroPoliza(polizas.getEmisor() + "-" + polizas.getNumPoliza() + "-" + polizas.getIdRenovacion());
 		generales.setEstatus(polizas.getEstatusPoliza());
 		generales.setTipoPoliza(polizas.getEmisor() + polizas.getNumPoliza());
-		generales.setFechaInicioVigencia(FormatosUtil.dateFormat(polizas.getFecFinVig()));
+		generales.setFechaInicioVigencia(FormatosUtil.dateFormat(polizas.getFecIniVig()));
 		generales.setFechaEmision(FormatosUtil.dateFormat(polizas.getFechaEmision()));
 
 	}
 
 	private void procesarGeneralesEmpresarial(RespuestaPolizaModel respuesta, Poliza polizas, Contratante contratante,
 			GeneralesModel generales) {
-
+		log.info("Metodo procesarGeneralesEmpresarial");
 		// Check if the emitter is GMMC or GMMM
 		if (isEmisorGMMCOrGMMM(polizas)) {
 			GeneralesEmpresarialModel generalesEmpresarial = obtenerGeneralesEmpresariales(polizas);
@@ -697,10 +825,12 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private boolean isEmisorGMMCOrGMMM(Poliza polizas) {
+		log.info("Metodo isEmisorGMMCOrGMMM emisor {}", polizas.getEmisor());
 		return polizas.getEmisor().equalsIgnoreCase("GMMC") || polizas.getEmisor().equalsIgnoreCase("GMMM");
 	}
 
 	private GeneralesEmpresarialModel obtenerGeneralesEmpresariales(Poliza polizas) {
+		log.info("Metodo obtenerGeneralesEmpresariales");
 		List<Contratante> contratantes = polizas.getContratante();
 		GeneralesEmpresarialModel generalesEmpresarial = new GeneralesEmpresarialModel();
 
@@ -723,10 +853,12 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private String obtenerValorNoNulo(String valor) {
+		log.info("Metodo obtenerValorNoNulo valor: {}", valor);
 		return valor != null ? valor : "ND";
 	}
 
 	private void procesarLeyendaMosaico(GeneralesModel generales, Poliza polizas) {
+		log.info("Metodo procesarLeyendaMosaico");
 		List<LeyendaMosaico> leyendaMosaico = polizas.getLeyendaMosaico();
 		if (leyendaMosaico.isEmpty()) {
 			if (polizas.getEmisor().equalsIgnoreCase("GMMC")) {
@@ -747,20 +879,20 @@ public class HeaderServiceImpl implements IHeaderService {
 				generales.setSumaAsegurada("$0.00");
 				generales.setSaldo("$0.00");
 			} else {
-				String concat = "$" + valorSaldo + ".00";
-				generales.setSumaAsegurada(concat);
-				generales.setSaldo(concat);
+				generales.setSumaAsegurada(valorSaldo);
+				generales.setSaldo(valorSaldo);
 			}
 		}
 	}
 
 	private void armarDetalleDeSaldo(Poliza polizas) {
-		DetalleDeSaldo detalleDeSaldoObj = new DetalleDeSaldo();
+		log.info("Metodo armarDetalleDeSaldo");
 		detalleDeSaldoObj.armarGraficas(polizas.getFondo(),
 				polizas.getEmisor() + "-" + polizas.getNumPoliza() + "-" + polizas.getIdRenovacion());
 	}
 
 	private void responsablePago(Poliza datosService, GeneralesModel generales) {
+		log.info("Metodo responsablePago");
 		ArrayList<ResponsablePago> responsablePago = datosService.getResponsablePago();
 
 		if (responsablePago.isEmpty()) {
@@ -776,6 +908,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private ArrayList<Asegurado> getAsegurados(Poliza poliza) {
+		log.info("Metodo getAsegurados");
 		if (poliza != null) {
 			ArrayList<Asegurado> asegurados = poliza.getAsegurado();
 			ArrayList<Asegurado> arreglo = new ArrayList<>();
@@ -831,6 +964,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private void getCoberturas(Poliza polizas, PolizaLimpiaModel polizaLimpia) {
+		log.info("Metodo getCoberturas");
 		List<CoberturasModel> coberturas = new ArrayList<>();
 		List<Coberturas> coberturasDePoliza = obtenerCoberturasDePoliza(polizas);
 		List<CoberturasModel> coberturasAgrupadas = new ArrayList<>();
@@ -869,6 +1003,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private ArrayList<Coberturas> obtenerCoberturasDePoliza(Poliza poliza) {
+		log.info("Metodo obtenerCoberturasDePoliza");
 		if (poliza != null) {
 			ArrayList<Coberturas> coberturas = poliza.getCobertura();
 			return coberturas;
@@ -877,6 +1012,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private int obtenerIndiceZona(List<CoberturasModel> coberturas, String zona) {
+		log.info("Metodo obtenerIndiceZona");
 		for (int numeroZona = 0; numeroZona < coberturas.size(); numeroZona++) {
 			if (coberturas.get(numeroZona).getNombreCobertura().equalsIgnoreCase(zona)) {
 				return numeroZona;
@@ -886,6 +1022,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private void getIntermediario(Poliza polizas, PolizaLimpiaModel polizaLimpia, String emisor) {
+		log.info("Metodo getIntermediario");
 		List<Intermediario> intermediario = polizas.getIntermediario();
 
 		if (intermediario != null && intermediario.size() > 0) {
@@ -899,7 +1036,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private List<BienAsegurado> getBienesAsegurado(List<BienAsegurado> bienesAseguradoOrigen) {
-
+		log.info("Metodo getBienesAsegurado");
 		Map<String, List<CoberturaBien>> bienesAseguradosMap = new HashMap<>();
 		List<BienAsegurado> bienesAseguradoDestino = new ArrayList<>();
 
@@ -945,6 +1082,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private List<InmuebleAseguradoDestino> getInmueblesasegurado(List<InmuebleAsegurado> inmueblesAseguradoOrigen) {
+		log.info("Metodo getInmueblesasegurado");
 		List<InmuebleAseguradoDestino> inmueblesAseguradoDestino = new ArrayList<>();
 		for (InmuebleAsegurado inmuebleAseguradoOrigen : inmueblesAseguradoOrigen) {
 			InmuebleAseguradoDestino inmuebleAseguradoDestino = new InmuebleAseguradoDestino();
@@ -980,6 +1118,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private List<Beneficiario> getBeneficiario(List<Beneficiario> beneficiarioPorPoliza) {
+		log.info("Metodo getBeneficiario");
 		List<Beneficiario> listaBeneficiarios = new ArrayList<>();
 
 		if (!beneficiarioPorPoliza.isEmpty()) {
@@ -996,6 +1135,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private Beneficiario createBeneficiario(Beneficiario beneficiarioItem) {
+		log.info("Metodo createBeneficiario");
 		Beneficiario beneficiario = new Beneficiario();
 
 		beneficiario.setNombreBeneficiario(beneficiarioItem.getNombreBeneficiario());
@@ -1006,11 +1146,13 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private String getParentesco(Beneficiario beneficiarioItem) {
+		log.info("Metodo getParentesco");
 		String parentesco = beneficiarioItem.getParentesco();
 		return StringUtils.isEmpty(parentesco) ? "PARENTESCO" : parentesco;
 	}
 
 	private String getPorcentaje(Beneficiario beneficiarioItem) {
+		log.info("Metodo getPorcentaje");
 		String porcentaje = beneficiarioItem.getPorcentaje(); // Now a double
 		if (StringUtils.isEmpty(porcentaje)) {
 			return "PORCENTAJE";
@@ -1020,6 +1162,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private String formatPorcentaje(String porcentaje) {
+		log.info("Metodo formatPorcentaje {}", porcentaje);
 		try {
 			double porcentajeDouble = Double.parseDouble(porcentaje);
 			return new DecimalFormat("#,###").format(porcentajeDouble) + " %";
@@ -1030,6 +1173,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private Beneficiario createEmptyBeneficiario() {
+		log.info("Metodo createEmptyBeneficiario ");
 		Beneficiario beneficiario = new Beneficiario();
 		beneficiario.setNombreBeneficiario(""); // O lo que sea necesario por defecto
 		beneficiario.setParentesco("PARENTESCO");
@@ -1037,9 +1181,9 @@ public class HeaderServiceImpl implements IHeaderService {
 		return beneficiario;
 	}
 
-	private List<PolizaModel> getIdAgente(String idAgente, boolean mostrarPoliza, PolizaLimpiaModel polizaLimpia) {
+	private PolizaModel getIdAgente(String idAgente, boolean mostrarPoliza, PolizaLimpiaModel polizaLimpia) {
+		log.info("Metodo procesarPoliza");
 		PolizaModel poliza = new PolizaModel();
-		List<PolizaModel> polizasLimpias = new ArrayList<>();
 		poliza.setPoliza(polizaLimpia);
 		if (idAgente != null && idAgente.length() > 0 && TramitesUtility.esNumerico(idAgente)) {
 			if (mostrarPoliza) {
@@ -1048,16 +1192,18 @@ public class HeaderServiceImpl implements IHeaderService {
 				idAgentePoliza = (idAgentePoliza.length() == 8) ? idAgentePoliza.substring(2, idAgentePoliza.length())
 						: idAgentePoliza;
 				if (idAgente.equalsIgnoreCase(idAgentePoliza)) {
-					polizasLimpias.add(poliza);
+					return poliza;
 				}
 			}
 		} else {
-			polizasLimpias.add(poliza);
+			return poliza;
 		}
-		return ordenarPolizas(polizasLimpias);
+		return poliza;
+
 	}
 
 	public List<PolizaModel> ordenarPolizas(List<PolizaModel> polizas) {
+		log.info("Metodo ordenarPolizas");
 		// Creamos una lista para ordenar las pólizas
 		List<PolizaModel> polizasOrdenadas = new ArrayList<>(polizas);
 
@@ -1094,9 +1240,90 @@ public class HeaderServiceImpl implements IHeaderService {
 			// orden
 			poliza.setOrden(i + 1);
 		}
-
+		log.info("procesarPoliza --> {}", new Gson().toJson(polizasOrdenadas));
 		// Retornamos la lista ordenada
 		return polizasOrdenadas;
 	}
 
+	private String encodeWhereParamIfNeeded(String url) throws UnsupportedEncodingException {
+		log.info("Metodo encodeWhereParamIfNeeded url: {}", url);
+		if (!url.contains("where=")) {
+			return url;
+		}
+
+		int whereIndex = url.indexOf("where=");
+		String queryString = url.substring(whereIndex + 6); // after 'where='
+
+		String encodedQuery = URLEncoder.encode(queryString, StandardCharsets.UTF_8.toString());
+
+		return url.substring(0, whereIndex + 6) + encodedQuery;
+	}
+
+	private boolean esTitular(PolizaModel poliza, String mail) {
+		for (Asegurado asegurado : poliza.getPoliza().getAsegurados()) {
+			if (asegurado.getUsApp() != null && asegurado.getUsApp().equals(mail)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private List<NotificacionModel> obtenerNotificaciones(List<AlertasModel> alertas) {
+
+		List<NotificacionModel> notificacionesConFormato = new ArrayList<>();
+
+		for (int index = 0; index < alertas.size(); index++) {
+			NotificacionModel notificacion = new NotificacionModel();
+			AlertasModel alerta = new AlertasModel();
+
+			alerta = alertas.get(index);
+			String persistencia = alerta.getPersistencia();
+
+			String msg = String.format("%s - %s", FormatosUtil.dateFormat(alerta.getFechaAlerta()),
+					alerta.getEstatus());
+			notificacion.setDescripcion(msg);
+
+			// seccion que busca en la base de datos la existencia de la
+			// notificacion
+			notificacion.setId(alerta.getId());
+			int idNotificacion = Integer.parseInt(alerta.getId());
+
+			// No ha sido vista o es persistente
+			if (notificacionImpl.encontrarNotificacion(idNotificacion) == false || "S".equals(persistencia)) {
+				if (notificacionImpl.encontrarNotificacion(idNotificacion) == false) {
+					// No ha sido dada por vista.
+					notificacion.setEstatus("0");
+				} else {
+					// ya fue dada por vista.
+					notificacion.setEstatus("1");
+
+				}
+				String fechaStr = FormatosUtil.dateFormat(alerta.getFechaAlerta());
+				String[] splitFecha = fechaStr.split("/");
+				notificacion.setFecha((splitFecha[2] + splitFecha[1] + splitFecha[0]));
+				notificacion.setNotificacion(alerta.getProducto() + "-" + alerta.getNumPoliza());
+				notificacionesConFormato.add(notificacion);
+			}
+		}
+		return notificacionesConFormato;
+	}
+
+	private List<Pago> obtenerProximosPagos(List<ProximosPagos> proximosPagos, List<PolizaModel> poliza,
+			String idAgente) {
+		List<Pago> jsonArrayProximosPagos = new ArrayList<>();
+		proximosPagos = filtradoUtil.obtenerProximosPagos(proximosPagos, poliza);
+		// }}
+		if (proximosPagos != null && proximosPagos.size() > 0) {
+			for (int i = 0; i < proximosPagos.size(); i++) {
+				ProximosPagos proximoPago = proximosPagos.get(i);
+				Pago pago = new Pago();
+				pago.setProducto(proximoPago.getProducto() + "-" + proximoPago.getNumPoliza());
+				pago.setImporteAPagar(FormatosUtil.formatoNumerolRedoneado(proximoPago.getMontoOriginal()));
+				pago.setFechaVencimiento(FormatosUtil.dateFormat(proximoPago.getFechaVencimiento()));
+
+				jsonArrayProximosPagos.add(pago);
+			}
+		}
+		return jsonArrayProximosPagos;
+	}
 }

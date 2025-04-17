@@ -15,7 +15,7 @@ public class Row implements Serializable {
 	@JsonProperty("Contratante")
 	public Contratante contratante;
 	@JsonProperty("Alertas")
-	public ArrayList<Object> alertas;
+	public ArrayList<AlertasModel> alertas;
 	@JsonProperty("Polizas")
 	public ArrayList<Poliza> polizas;
 	@JsonProperty("PolizasGMMAsegurado")
@@ -31,11 +31,11 @@ public class Row implements Serializable {
 		this.contratante = contratante;
 	}
 
-	public ArrayList<Object> getAlertas() {
+	public ArrayList<AlertasModel> getAlertas() {
 		return alertas;
 	}
 
-	public void setAlertas(ArrayList<Object> alertas) {
+	public void setAlertas(ArrayList<AlertasModel> alertas) {
 		this.alertas = alertas;
 	}
 

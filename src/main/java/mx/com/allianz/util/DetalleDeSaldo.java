@@ -148,7 +148,7 @@ public class DetalleDeSaldo {
 					saldo = alternativaYsaldoOrigen.getString(nodo);
 				} else {
 					coberturas = JSONFactoryUtil.createJSONArray();
-					saldo = alternativaYsaldoOrigen.getString(nodo);
+					saldo = String.valueOf(alternativaYsaldoOrigen.get(nodo));
 				}
 
 				JSONObject itemAlternativaYSaldoDestino = JSONFactoryUtil.createJSONObject();

@@ -17,8 +17,7 @@ import mx.com.allianz.exception.BusinessException;
  * @Proyecto: incode-services
  * @Paquete: mx.com.allianz.commons.model
  * @Clase: SingleResponse.java
- * @param <R>
- *            Tipo de la respuesta<br>
+ * @param <R> Tipo de la respuesta<br>
  *            Modelo de respuesta general
  * 
  * @version 1.0.0
@@ -38,14 +37,14 @@ public class SingleResponse<R> implements Serializable {
 	 * Codigo de respuesta emitido
 	 */
 	@ApiModelProperty(value = "C\u00f3digo de respuesta emitido, puede ser de \u00e9xito, error o validaciones", required = true)
-	 @JsonProperty("responseCode")
+	@JsonProperty("responseCode")
 	private ResponseCode responseCode;
 
 	/**
 	 * Objeto de la respuesta
 	 */
 	@ApiModelProperty(value = "Objeto de la respuesta", required = true)
-    @JsonProperty("response")
+	@JsonProperty("response")
 	private transient R response;
 	/**
 	 * Determina la respuesta es correcta(true) o contiene errores o
@@ -58,7 +57,7 @@ public class SingleResponse<R> implements Serializable {
 	 * Lista de validaciones en la respuesta
 	 */
 	@ApiModelProperty(value = "Lista de validaciones de negocio.")
-	 @JsonProperty("validations")
+	@JsonProperty("validations")
 	private List<ResponseCode> validationsCodes;
 
 	/**
@@ -73,8 +72,7 @@ public class SingleResponse<R> implements Serializable {
 	 * determinara que la respuesta no es correcta y que deben revisarse los
 	 * elementos
 	 * 
-	 * @param validationsCodes
-	 *            lista de validaciones
+	 * @param validationsCodes lista de validaciones
 	 */
 	public void validations(final List<ResponseCode> validationsCodes) {
 		this.validationsCodes = new ArrayList<>(validationsCodes);
@@ -86,13 +84,11 @@ public class SingleResponse<R> implements Serializable {
 	 * Metodo que determina que la respuesta es exitosa y su mensaje, puede estar
 	 * con formato {} para usar los parametros en la cadena
 	 * 
-	 * @param response
-	 *            Objeto de respuesta, es obligatorio almenos un true o string
-	 * @param responseCode
-	 *            mensaje de exito de la respuesta. Ej. "Operacion realizada
-	 *            exitosamente."
-	 * @param params
-	 *            parametros para el mensaje.
+	 * @param response     Objeto de respuesta, es obligatorio almenos un true o
+	 *                     string
+	 * @param responseCode mensaje de exito de la respuesta. Ej. "Operacion
+	 *                     realizada exitosamente."
+	 * @param params       parametros para el mensaje.
 	 */
 	public void done(final R response, final ResponseCode responseCode, final Object... params) {
 		this.response = response;
@@ -105,14 +101,12 @@ public class SingleResponse<R> implements Serializable {
 	 * Metodo que determina que la respuesta es incorrecta. El mensaje se determina
 	 * en el metodo getMessage() de Exception o su implementacion
 	 * 
-	 * @param responseCode
-	 *            codigo de respuesta de la operacion
-	 * @param exception
-	 *            excepcion que provoco el error
-	 * @param params
-	 *            parametros a colocar en el mensaje de error
+	 * @param responseCode codigo de respuesta de la operacion
+	 * @param exception    excepcion que provoco el error
+	 * @param params       parametros a colocar en el mensaje de error
 	 */
-	public void error(final R response, final ResponseCode responseCode, final Exception exception, final Object... params) {
+	public void error(final R response, final ResponseCode responseCode, final Exception exception,
+			final Object... params) {
 		this.ok = false;
 		this.response = response;
 		if (exception instanceof BusinessException) {
@@ -132,10 +126,8 @@ public class SingleResponse<R> implements Serializable {
 	 * Metodo que determina que la respuesta es incorrecta. El mensaje se determina
 	 * en el metodo getMessage() de Exception o su implementacion
 	 * 
-	 * @param responseCode
-	 *            codigo de respuesta de la operacion
-	 * @param params
-	 *            parametros a colocar en el mensaje de error
+	 * @param responseCode codigo de respuesta de la operacion
+	 * @param params       parametros a colocar en el mensaje de error
 	 */
 	public void error(final ResponseCode responseCode, final Object... params) {
 		this.ok = false;
@@ -179,6 +171,12 @@ public class SingleResponse<R> implements Serializable {
 	 */
 	public ResponseCode getResponseCode() {
 		return responseCode;
+	}
+
+	@Override
+	public String toString() {
+		return "SingleResponse [responseCode=" + responseCode + ", response=" + response + ", ok=" + ok
+				+ ", validationsCodes=" + validationsCodes + "]";
 	}
 
 }

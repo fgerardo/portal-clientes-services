@@ -1,6 +1,11 @@
 package mx.com.allianz.model;
 
 import java.io.Serializable;
+import java.util.List;
+
+import org.json.JSONObject;
+
+import mx.com.allianz.util.DetalleDeSaldo;
 
 public class ResponsePolizaModel implements Serializable {
 	/**
@@ -14,8 +19,39 @@ public class ResponsePolizaModel implements Serializable {
 	private String nombre;
 	private String tipoPersona;
 	private String apellidoP;
+	private String esContratante;
 	private String apellidoM;
 	private GeneralesModel generales;
+	private DetalleDeSaldo detalleSaldo;
+	private List<AlertasModel> alertas;
+	private List<NotificacionModel> notificaciones;
+	private List<Pago> proximosPagos;
+	private List<PolizaModel> poliza;
+	private JSONObject obtenerJsonFamiliasParaLaRuleta;
+
+	public String getEsContratante() {
+		return esContratante;
+	}
+
+	public void setEsContratante(String esContratante) {
+		this.esContratante = esContratante;
+	}
+
+	public List<PolizaModel> getPoliza() {
+		return poliza;
+	}
+
+	public void setPoliza(List<PolizaModel> poliza) {
+		this.poliza = poliza;
+	}
+
+	public List<Pago> getProximosPagos() {
+		return proximosPagos;
+	}
+
+	public void setProximosPagos(List<Pago> list) {
+		this.proximosPagos = list;
+	}
 
 	public boolean isEstatus() {
 		return estatus;
@@ -89,11 +125,46 @@ public class ResponsePolizaModel implements Serializable {
 		this.generales = generales;
 	}
 
+	public DetalleDeSaldo getDetalleSaldo() {
+		return detalleSaldo;
+	}
+
+	public void setDetalleSaldo(DetalleDeSaldo detalleSaldo) {
+		this.detalleSaldo = detalleSaldo;
+	}
+
+	public List<AlertasModel> getAlertas() {
+		return alertas;
+	}
+
+	public void setAlertas(List<AlertasModel> alertas) {
+		this.alertas = alertas;
+	}
+
+	public List<NotificacionModel> getNotificaciones() {
+		return notificaciones;
+	}
+
+	public void setNotificaciones(List<NotificacionModel> notificaciones) {
+		this.notificaciones = notificaciones;
+	}
+
+	public JSONObject getObtenerJsonFamiliasParaLaRuleta() {
+		return obtenerJsonFamiliasParaLaRuleta;
+	}
+
+	public void setObtenerJsonFamiliasParaLaRuleta(JSONObject obtenerJsonFamiliasParaLaRuleta) {
+		this.obtenerJsonFamiliasParaLaRuleta = obtenerJsonFamiliasParaLaRuleta;
+	}
+
 	@Override
 	public String toString() {
 		return "ResponsePolizaModel [estatus=" + estatus + ", mensaje=" + mensaje + ", idClientePoliza="
 				+ idClientePoliza + ", rfc=" + rfc + ", nombre=" + nombre + ", tipoPersona=" + tipoPersona
-				+ ", apellidoP=" + apellidoP + ", apellidoM=" + apellidoM + ", generales=" + generales + "]";
+				+ ", apellidoP=" + apellidoP + ", esContratante=" + esContratante + ", apellidoM=" + apellidoM
+				+ ", generales=" + generales + ", detalleSaldo=" + detalleSaldo + ", alertas=" + alertas
+				+ ", notificaciones=" + notificaciones + ", proximosPagos=" + proximosPagos + ", poliza=" + poliza
+				+ ", obtenerJsonFamiliasParaLaRuleta=" + obtenerJsonFamiliasParaLaRuleta + "]";
 	}
 
 }
