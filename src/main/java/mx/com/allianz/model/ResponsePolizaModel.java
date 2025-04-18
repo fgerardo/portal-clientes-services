@@ -29,6 +29,7 @@ public class ResponsePolizaModel implements Serializable {
 	private List<Pago> proximosPagos;
 	private List<PolizaModel> poliza;
 	private JSONObject obtenerJsonFamiliasParaLaRuleta;
+	private List<Vigencias> vigencias;
 	private TramitesObjecto tramites;
 	private WhatsapModel infoWhatsApp;
 
@@ -176,6 +177,14 @@ public class ResponsePolizaModel implements Serializable {
 		this.infoWhatsApp = infoWhatsApp;
 	}
 
+	public List<Vigencias> getVigencias() {
+		return vigencias;
+	}
+
+	public void setVigencias(List<Vigencias> vigencias) {
+		this.vigencias = vigencias;
+	}
+
 	@Override
 	public String toString() {
 		return "ResponsePolizaModel [estatus=" + estatus + ", mensaje=" + mensaje + ", idClientePoliza="
@@ -183,8 +192,8 @@ public class ResponsePolizaModel implements Serializable {
 				+ ", apellidoP=" + apellidoP + ", esContratante=" + esContratante + ", apellidoM=" + apellidoM
 				+ ", generales=" + generales + ", detalleSaldo=" + detalleSaldo + ", alertas=" + alertas
 				+ ", notificaciones=" + notificaciones + ", proximosPagos=" + proximosPagos + ", poliza=" + poliza
-				+ ", obtenerJsonFamiliasParaLaRuleta=" + obtenerJsonFamiliasParaLaRuleta + ", tramites=" + tramites
-				+ ", infoWhatsApp=" + infoWhatsApp + "]";
+				+ ", obtenerJsonFamiliasParaLaRuleta=" + obtenerJsonFamiliasParaLaRuleta + ", vigencias=" + vigencias
+				+ ", tramites=" + tramites + ", infoWhatsApp=" + infoWhatsApp + "]";
 	}
 
 }

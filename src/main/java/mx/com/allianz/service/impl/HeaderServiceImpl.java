@@ -16,6 +16,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +92,7 @@ import mx.com.allianz.model.RespuestaPolizaModel;
 import mx.com.allianz.model.Root;
 import mx.com.allianz.model.Row;
 import mx.com.allianz.model.TramitesObjecto;
+import mx.com.allianz.model.Vigencias;
 import mx.com.allianz.service.IHeaderService;
 import mx.com.allianz.util.DetalleDeSaldo;
 import mx.com.allianz.util.FiltradoAgenteUtil;
@@ -362,7 +364,7 @@ public class HeaderServiceImpl implements IHeaderService {
 			Root servicesAllianzPoliza = getServicesAllianzPoliza(servicioWeb);
 
 			ResponsePolizaModel resultadoPolizas = resultadoPolizas(servicesAllianzPoliza.getRows(), esContratante,
-					idAgente, mail);
+					idAgente, mail, idCliente);
 			log.info("Respuesta del servicio de pólizas: {}", resultadoPolizas);
 			return resultadoPolizas;
 		} catch (Exception e) {
@@ -423,7 +425,8 @@ public class HeaderServiceImpl implements IHeaderService {
 		}
 	}
 
-	private ResponsePolizaModel resultadoPolizas(ArrayList<Row> rows, boolean isContra, String idAgente, String mail) {
+	private ResponsePolizaModel resultadoPolizas(ArrayList<Row> rows, boolean isContra, String idAgente, String mail,
+			String idCliente) {
 
 		log.info("Metodo resultadoPolizas");
 		if (rows == null || rows.isEmpty()) {
@@ -446,7 +449,7 @@ public class HeaderServiceImpl implements IHeaderService {
 
 			if (dataService != null && !dataService.isEmpty()) {
 				log.info("Polizas encontradas para contratante válido: {}", dataService.size());
-				return procesarPolizas(rows, isContra, idAgente, mail);
+				return procesarPolizas(rows, isContra, idAgente, mail, idCliente);
 			} else {
 				log.warn("No se encontraron pólizas para ningún contratante válido.");
 			}
@@ -459,7 +462,8 @@ public class HeaderServiceImpl implements IHeaderService {
 
 	}
 
-	public ResponsePolizaModel procesarPolizas(ArrayList<Row> rows, boolean isContra, String idAgente, String mail) {
+	public ResponsePolizaModel procesarPolizas(ArrayList<Row> rows, boolean isContra, String idAgente, String mail,
+			String idCliente) {
 		log.info("Metodo procesarPolizas");
 		List<PolizaModel> poliza = new ArrayList<>();
 		ResponsePolizaModel responsePoliza = new ResponsePolizaModel();
@@ -576,6 +580,7 @@ public class HeaderServiceImpl implements IHeaderService {
 			responsePoliza.setPoliza(poliza);
 			responsePoliza.setEsContratante(esContratantee);
 			responsePoliza.setObtenerJsonFamiliasParaLaRuleta(grupoDePolizasHardCode.obtenerJsonFamiliasParaLaRuleta());
+			responsePoliza.setVigencias(getVigenciasPoliza(idCliente, rows, idAgente));
 			String urlConsultarTramites = servicesConfiguration.getUrlConsultarTramites();
 			TramitesObjecto obtenerTramites = obtenerTramites(poliza, urlConsultarTramites);
 			if (obtenerTramites != null) {
@@ -1357,6 +1362,62 @@ public class HeaderServiceImpl implements IHeaderService {
 			TramitesJSON tramitesJson = new TramitesJSON();
 			TramitesObjecto tramites = tramitesJson.obtenerTramitesObjecto(tramitesDeBaseDeDatos);
 			return tramites;
+		}
+		return null;
+	}
+
+	public List<Vigencias> getVigenciasPoliza(String idCliente, ArrayList<Row> servicioWeb, String idAgente) {
+
+		Set<String> idepoliciesVig = new HashSet<String>();
+		if (idCliente != null) {
+			List<Vigencias> response = new ArrayList<>();
+			try {
+				if (servicioWeb.size() > 0 && servicioWeb.get(0) != null) {
+					Row dataService = new Row();
+					;
+					for (Row row : servicioWeb) {
+						Contratante contratante = row.getContratante();
+						String esContratante = contratante != null ? contratante.getEsContratante() : null;
+
+						log.debug("Contratante encontrado con estado: {}", esContratante);
+
+						if ("S".equalsIgnoreCase(esContratante)) {
+							dataService = row;
+							break;
+						}
+					}
+
+					List<Poliza> polizas = dataService.getPolizas();
+
+					String productosVisiblesPortal = productosConfiguration.getProductosVisiblesPortal();
+					String[] polInhabilesArray = productosVisiblesPortal.isEmpty() ? null
+							: productosVisiblesPortal.split(",");
+
+					for (Poliza poliza : polizas) {
+						String idepol = poliza.getiDEPOL();
+						if (idepoliciesVig.contains(idepol)) {
+							continue;
+						} else {
+							idepoliciesVig.add(poliza.getiDEPOL());
+							if (isPolizaInhabiles(poliza, polInhabilesArray)) {
+								Vigencias contenedor = new Vigencias();
+								contenedor.setProducto(poliza.getEmisor() + "-" + poliza.getNumPoliza() + "-"
+										+ poliza.getIdRenovacion());
+								contenedor.setFechaDesde(FormatosUtil.dateFormat(poliza.getFecIniVig()));
+								contenedor.setFechaHasta(FormatosUtil.dateFormat(poliza.getFecFinVig()));
+								String familia = grupoDePolizasHardCode.setFamilia(poliza.getEmisor(),
+										obtenerTodosLosProductos());
+								contenedor.setFamilia(familia);
+								response.add(contenedor);
+							}
+						}
+					}
+
+					return response;
+				}
+			} catch (Exception e) {
+				log.error("Error {}", e);
+			}
 		}
 		return null;
 	}
