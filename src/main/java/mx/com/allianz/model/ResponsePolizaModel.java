@@ -28,6 +28,7 @@ public class ResponsePolizaModel implements Serializable {
 	private List<Pago> proximosPagos;
 	private List<PolizaModel> poliza;
 	private JSONObject obtenerJsonFamiliasParaLaRuleta;
+	private TramitesObjecto tramites;
 
 	public String getEsContratante() {
 		return esContratante;
@@ -157,6 +158,14 @@ public class ResponsePolizaModel implements Serializable {
 		this.obtenerJsonFamiliasParaLaRuleta = obtenerJsonFamiliasParaLaRuleta;
 	}
 
+	public TramitesObjecto getTramites() {
+		return tramites;
+	}
+
+	public void setTramites(TramitesObjecto tramites) {
+		this.tramites = tramites;
+	}
+
 	@Override
 	public String toString() {
 		return "ResponsePolizaModel [estatus=" + estatus + ", mensaje=" + mensaje + ", idClientePoliza="
@@ -164,7 +173,8 @@ public class ResponsePolizaModel implements Serializable {
 				+ ", apellidoP=" + apellidoP + ", esContratante=" + esContratante + ", apellidoM=" + apellidoM
 				+ ", generales=" + generales + ", detalleSaldo=" + detalleSaldo + ", alertas=" + alertas
 				+ ", notificaciones=" + notificaciones + ", proximosPagos=" + proximosPagos + ", poliza=" + poliza
-				+ ", obtenerJsonFamiliasParaLaRuleta=" + obtenerJsonFamiliasParaLaRuleta + "]";
+				+ ", obtenerJsonFamiliasParaLaRuleta=" + obtenerJsonFamiliasParaLaRuleta + ", tramites=" + tramites
+				+ "]";
 	}
 
 }

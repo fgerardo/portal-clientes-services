@@ -3,11 +3,15 @@ package mx.com.allianz.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
 import mx.com.allianz.model.GeneralesModel;
 import mx.com.allianz.model.PolizaLimpiaModel;
 import mx.com.allianz.model.PolizaModel;
 import mx.com.allianz.model.ProximosPagos;
+import mx.com.allianz.util.tramites.TramitesUtility;
 
+@Service
 public class FiltradoAgenteUtil {
 
 	public boolean esAgente(String idAgente) {

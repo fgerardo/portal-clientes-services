@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +50,7 @@ import mx.com.allianz.commons.Codes;
 import mx.com.allianz.commons.model.RespuestaGenerica;
 import mx.com.allianz.config.ProductosConfiguration;
 import mx.com.allianz.config.ServicesConfiguration;
+import mx.com.allianz.config.WhatsappConfiguracion;
 import mx.com.allianz.exception.BusinessException;
 import mx.com.allianz.exception.DataAccessException;
 import mx.com.allianz.model.AlertasModel;
@@ -90,6 +90,7 @@ import mx.com.allianz.model.ResponsePolizaModel;
 import mx.com.allianz.model.RespuestaPolizaModel;
 import mx.com.allianz.model.Root;
 import mx.com.allianz.model.Row;
+import mx.com.allianz.model.TramitesObjecto;
 import mx.com.allianz.service.IHeaderService;
 import mx.com.allianz.util.DetalleDeSaldo;
 import mx.com.allianz.util.FiltradoAgenteUtil;
@@ -97,9 +98,11 @@ import mx.com.allianz.util.FolletoProductoUtil;
 import mx.com.allianz.util.FormatosUtil;
 import mx.com.allianz.util.GrupoDePolizasHardCode;
 import mx.com.allianz.util.ImagenPerfilUtil;
-import mx.com.allianz.util.JSONFactoryUtil;
 import mx.com.allianz.util.NotificacionesImpl;
-import mx.com.allianz.util.TramitesUtility;
+import mx.com.allianz.util.tramites.TramiteEntity;
+import mx.com.allianz.util.tramites.TramitesDAO;
+import mx.com.allianz.util.tramites.TramitesJSON;
+import mx.com.allianz.util.tramites.TramitesUtility;
 
 @Service
 public class HeaderServiceImpl implements IHeaderService {
@@ -123,12 +126,16 @@ public class HeaderServiceImpl implements IHeaderService {
 	@Autowired
 	private FiltradoAgenteUtil filtradoUtil;
 
+	@Autowired
 	private DetalleDeSaldo detalleDeSaldoObj;
 
 	@Autowired
 	private SoapClient soapClient;
 	@Autowired
 	private ImagenPerfilUtil imagenPerfilUtil;
+	
+	@Autowired
+	private WhatsappConfiguracion whatsappConfiguracion;
 
 	/**
 	 * Instancia de manejo de codigos de respuesta
@@ -466,19 +473,6 @@ public class HeaderServiceImpl implements IHeaderService {
 			Row dataService = rows.stream().filter(row -> row.getContratante() != null)
 					.filter(row -> "S".equalsIgnoreCase(row.getContratante().getEsContratante())).findFirst()
 					.orElse(rows.get(0));
-//FGGG
-			try {
-				List<AlertasModel> notificacionesService = dataService.getAlertas();
-				List<NotificacionModel> obtenerNotificaciones = obtenerNotificaciones(notificacionesService);
-				responsePoliza.setNotificaciones(obtenerNotificaciones);
-			} catch (Exception e) {
-				List<NotificacionModel> notificaciones = new ArrayList<>();
-				NotificacionModel notifi = new NotificacionModel();
-				notifi.setDescripcion("No hay notificaciones disponibles.");
-				notifi.setEstatus("1");
-				notificaciones.add(notifi);
-				responsePoliza.setNotificaciones(notificaciones);
-			}
 
 			Contratante contratante = dataService.getContratante();
 			if (contratante == null) {
@@ -554,6 +548,7 @@ public class HeaderServiceImpl implements IHeaderService {
 			}
 
 			poliza = polizaTempLimpioFinal;
+			log.info("PolizaLimpioFina {}", poliza);
 			String esContratantee = contratante.getEsContratante();
 			log.info("{}", detalleDeSaldoObj.getJsonDetalleDeSaldo());
 			responsePoliza.setDetalleSaldo(detalleDeSaldoObj);
@@ -570,15 +565,19 @@ public class HeaderServiceImpl implements IHeaderService {
 				notificaciones.add(notifi);
 				responsePoliza.setNotificaciones(notificaciones);
 			}
-			
-			List<ProximosPagos> proximosPagos = new ArrayList<>();
+
+			List<ProximosPagos> proximosPagos = dataService.getProximosPagos();
 			responsePoliza.setProximosPagos(obtenerProximosPagos(proximosPagos, polizaTempLimpioFinal, idAgente));
 			responsePoliza.setGenerales(generales);
 			responsePoliza.setPoliza(poliza);
 			responsePoliza.setEsContratante(esContratantee);
 			responsePoliza.setObtenerJsonFamiliasParaLaRuleta(grupoDePolizasHardCode.obtenerJsonFamiliasParaLaRuleta());
+			TramitesObjecto obtenerTramites = obtenerTramites(poliza);
+			if(obtenerTramites != null) {
+				responsePoliza.setTramites(obtenerTramites);
+			}
 
-			log.info("Pólizas procesadas: {}", new Gson().toJson(poliza));
+			log.info("Pólizas procesadas: {}", new Gson().toJson(responsePoliza));
 
 		} catch (Exception e) {
 			log.error("Error al procesar pólizas: {}", e.getMessage(), e);
@@ -1269,43 +1268,49 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	private List<NotificacionModel> obtenerNotificaciones(List<AlertasModel> alertas) {
-
 		List<NotificacionModel> notificacionesConFormato = new ArrayList<>();
 
-		for (int index = 0; index < alertas.size(); index++) {
+		// Recorremos las alertas usando un for-each
+		for (AlertasModel alerta : alertas) {
 			NotificacionModel notificacion = new NotificacionModel();
-			AlertasModel alerta = new AlertasModel();
 
-			alerta = alertas.get(index);
-			String persistencia = alerta.getPersistencia();
-
+			// Establecer descripción
 			String msg = String.format("%s - %s", FormatosUtil.dateFormat(alerta.getFechaAlerta()),
 					alerta.getEstatus());
 			notificacion.setDescripcion(msg);
 
-			// seccion que busca en la base de datos la existencia de la
-			// notificacion
-			notificacion.setId(alerta.getId());
+			// Establecer ID de notificación y comprobar su existencia
 			int idNotificacion = Integer.parseInt(alerta.getId());
+			boolean notificacionExiste = notificacionImpl.encontrarNotificacion(idNotificacion);
 
 			// No ha sido vista o es persistente
-			if (notificacionImpl.encontrarNotificacion(idNotificacion) == false || "S".equals(persistencia)) {
-				if (notificacionImpl.encontrarNotificacion(idNotificacion) == false) {
-					// No ha sido dada por vista.
-					notificacion.setEstatus("0");
-				} else {
-					// ya fue dada por vista.
-					notificacion.setEstatus("1");
+			if (!notificacionExiste || "S".equals(alerta.getPersistencia())) {
+				// Asignar estatus basado en si la notificación ha sido vista
+				notificacion.setEstatus(notificacionExiste ? "1" : "0");
 
-				}
-				String fechaStr = FormatosUtil.dateFormat(alerta.getFechaAlerta());
-				String[] splitFecha = fechaStr.split("/");
-				notificacion.setFecha((splitFecha[2] + splitFecha[1] + splitFecha[0]));
+				// Formatear la fecha
+				String fechaFormateada = formatearFecha(alerta.getFechaAlerta());
+				notificacion.setFecha(fechaFormateada);
+
+				// Asignar identificación de la notificación
 				notificacion.setNotificacion(alerta.getProducto() + "-" + alerta.getNumPoliza());
+
+				// Agregar a la lista
 				notificacionesConFormato.add(notificacion);
 			}
 		}
 		return notificacionesConFormato;
+	}
+
+	/**
+	 * Método para formatear la fecha de la alerta en formato yyyyMMdd.
+	 * 
+	 * @param fechaStr Fecha en formato String.
+	 * @return Fecha formateada en el formato 'yyyyMMdd'.
+	 */
+	private String formatearFecha(String fechaStr) {
+		String[] splitFecha = fechaStr.split("/");
+		return splitFecha[2] + splitFecha[1] + splitFecha[0]; // Formato: "yyyyMMdd"
 	}
 
 	private List<Pago> obtenerProximosPagos(List<ProximosPagos> proximosPagos, List<PolizaModel> poliza,
@@ -1326,4 +1331,18 @@ public class HeaderServiceImpl implements IHeaderService {
 		}
 		return jsonArrayProximosPagos;
 	}
+
+	private TramitesObjecto obtenerTramites(List<PolizaModel> polizas) {
+		if (polizas != null) {
+			TramitesUtility tramitesUtility = new TramitesUtility();
+			List<String> familiasUnicas = tramitesUtility.obtenerPolizasUnicas(polizas);
+			TramitesDAO tramitesDao = new TramitesDAO(restTemplate);
+			List<TramiteEntity> tramitesDeBaseDeDatos = tramitesDao.obtenerTramitesParaJson(familiasUnicas);
+			TramitesJSON tramitesJson = new TramitesJSON();
+			TramitesObjecto tramites = tramitesJson.obtenerTramitesObjecto(tramitesDeBaseDeDatos);
+			return tramites;
+		}
+		return null;
+	}
+
 }

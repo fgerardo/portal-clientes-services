@@ -22,8 +22,16 @@ public class ServicesConfiguration {
 	private String servicioPolizas;
 	private String servicioPolizasGmm;
 	private String urlConsultarNotificacion;
-
 	private String urlConsultarImagenPerfil;
+	private String urlConsultarTramites;
+
+	public String getUrlConsultarTramites() {
+		return urlConsultarTramites;
+	}
+
+	public void setUrlConsultarTramites(String urlConsultarTramites) {
+		this.urlConsultarTramites = urlConsultarTramites;
+	}
 
 	public String getServicioLogin() {
 		return servicioLogin;

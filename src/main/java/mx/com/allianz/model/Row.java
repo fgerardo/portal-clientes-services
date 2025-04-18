@@ -21,7 +21,7 @@ public class Row implements Serializable {
 	@JsonProperty("PolizasGMMAsegurado")
 	public ArrayList<Object> polizasGMMAsegurado;
 	@JsonProperty("ProximosPagos")
-	public ArrayList<Object> proximosPagos;
+	public ArrayList<ProximosPagos> proximosPagos;
 
 	public Contratante getContratante() {
 		return contratante;
@@ -55,11 +55,11 @@ public class Row implements Serializable {
 		this.polizasGMMAsegurado = polizasGMMAsegurado;
 	}
 
-	public ArrayList<Object> getProximosPagos() {
+	public ArrayList<ProximosPagos> getProximosPagos() {
 		return proximosPagos;
 	}
 
-	public void setProximosPagos(ArrayList<Object> proximosPagos) {
+	public void setProximosPagos(ArrayList<ProximosPagos> proximosPagos) {
 		this.proximosPagos = proximosPagos;
 	}
 

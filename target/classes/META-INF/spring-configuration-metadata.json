@@ -228,6 +228,11 @@
       "sourceType": "mx.com.allianz.config.ServicesConfiguration"
     },
     {
+      "name": "services.url-consultar-tramites",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
       "name": "services.url-consultar-usuario-bitacora",
       "type": "java.lang.String",
       "sourceType": "mx.com.allianz.config.ServicesConfiguration"

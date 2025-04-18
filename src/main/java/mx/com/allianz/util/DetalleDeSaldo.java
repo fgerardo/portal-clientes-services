@@ -8,11 +8,13 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import mx.com.allianz.model.Fondo;
 import mx.com.allianz.model.Movimiento;
 import mx.com.allianz.model.Saldo;
 
+@Service
 public class DetalleDeSaldo {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DetalleDeSaldo.class);
 	private JSONObject graficaSaldoActual = null;
@@ -153,7 +155,7 @@ public class DetalleDeSaldo {
 
 				JSONObject itemAlternativaYSaldoDestino = JSONFactoryUtil.createJSONObject();
 				JSONObject itemAlternativaYSaldoOrigen = saldosYMovs.getJSONObject(i);
-				itemAlternativaYSaldoDestino.put(nodo, itemAlternativaYSaldoOrigen.getString(nodo));
+				itemAlternativaYSaldoDestino.put(nodo, String.valueOf(itemAlternativaYSaldoOrigen.get(nodo)));
 				itemAlternativaYSaldoDestino.put("aportaciones", itemAlternativaYSaldoOrigen.getString("aportaciones"));
 				itemAlternativaYSaldoDestino.put("saldoFinal", itemAlternativaYSaldoOrigen.getString("saldoFinal"));
 				itemAlternativaYSaldoDestino.put("anioMes", itemAlternativaYSaldoOrigen.getString("anioMes"));
