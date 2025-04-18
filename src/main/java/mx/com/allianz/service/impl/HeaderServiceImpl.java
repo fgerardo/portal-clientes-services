@@ -103,6 +103,10 @@ import mx.com.allianz.util.tramites.TramiteEntity;
 import mx.com.allianz.util.tramites.TramitesDAO;
 import mx.com.allianz.util.tramites.TramitesJSON;
 import mx.com.allianz.util.tramites.TramitesUtility;
+import mx.com.allianz.util.whatsapp.InformacionWhatsApp;
+import mx.com.allianz.util.whatsapp.RespuestaWhatsApp;
+import mx.com.allianz.util.whatsapp.ValidadorWhatsApp;
+import mx.com.allianz.whatsap.model.WhatsapModel;
 
 @Service
 public class HeaderServiceImpl implements IHeaderService {
@@ -110,6 +114,9 @@ public class HeaderServiceImpl implements IHeaderService {
 
 	@Autowired
 	private ServicesConfiguration servicesConfiguration;
+
+	@Autowired
+	private WhatsappConfiguracion whatsappConfiguracion;
 
 	@Autowired
 	private ProductosConfiguration productosConfiguration;
@@ -133,9 +140,6 @@ public class HeaderServiceImpl implements IHeaderService {
 	private SoapClient soapClient;
 	@Autowired
 	private ImagenPerfilUtil imagenPerfilUtil;
-	
-	@Autowired
-	private WhatsappConfiguracion whatsappConfiguracion;
 
 	/**
 	 * Instancia de manejo de codigos de respuesta
@@ -180,7 +184,7 @@ public class HeaderServiceImpl implements IHeaderService {
 			String idAgente = urlDecript.contains("idAgente") ? extractParameterValue(parametrosArreglo, 5) : null;
 			String codeSend = codCliIntegrador != null && !codCliIntegrador.isEmpty() ? codCliIntegrador : codCliente;
 
-			String polizas = getPolizas(codeSend, idAgente, isContratante, emailURL);
+			ResponsePolizaModel polizas = getPolizas(codeSend, idAgente, isContratante, emailURL);
 
 			responseHeader.setCodCliIntegrador(codeSend);
 			responseHeader.setIsContratante(isContratante);
@@ -350,17 +354,17 @@ public class HeaderServiceImpl implements IHeaderService {
 		return parametrosJuntos.split("&");
 	}
 
-	private String getPolizas(String idCliente, String idAgente, boolean isContratante, String mail) {
+	private ResponsePolizaModel getPolizas(String idCliente, String idAgente, boolean isContratante, String mail) {
 		log.info("Metodo getPolizas idCliente: {}, mail: {}", idCliente, mail);
 		try {
 			String servicioWeb = construirUrlPolizas(idCliente, isContratante, mail);
 			boolean esContratante = isContratante;
 			Root servicesAllianzPoliza = getServicesAllianzPoliza(servicioWeb);
 
-			List<PolizaModel> resultadoPolizas = resultadoPolizas(servicesAllianzPoliza.getRows(), esContratante,
+			ResponsePolizaModel resultadoPolizas = resultadoPolizas(servicesAllianzPoliza.getRows(), esContratante,
 					idAgente, mail);
 			log.info("Respuesta del servicio de pólizas: {}", resultadoPolizas);
-			return "OK";
+			return resultadoPolizas;
 		} catch (Exception e) {
 			log.error("Error al obtener pólizas: {}", e.getMessage(), e);
 			throw new BusinessException(codes.getResponseCode("IGBL001"));
@@ -419,7 +423,7 @@ public class HeaderServiceImpl implements IHeaderService {
 		}
 	}
 
-	private List<PolizaModel> resultadoPolizas(ArrayList<Row> rows, boolean isContra, String idAgente, String mail) {
+	private ResponsePolizaModel resultadoPolizas(ArrayList<Row> rows, boolean isContra, String idAgente, String mail) {
 
 		log.info("Metodo resultadoPolizas");
 		if (rows == null || rows.isEmpty()) {
@@ -442,7 +446,7 @@ public class HeaderServiceImpl implements IHeaderService {
 
 			if (dataService != null && !dataService.isEmpty()) {
 				log.info("Polizas encontradas para contratante válido: {}", dataService.size());
-				procesarPolizas(rows, isContra, idAgente, mail);
+				return procesarPolizas(rows, isContra, idAgente, mail);
 			} else {
 				log.warn("No se encontraron pólizas para ningún contratante válido.");
 			}
@@ -455,7 +459,7 @@ public class HeaderServiceImpl implements IHeaderService {
 
 	}
 
-	public List<PolizaModel> procesarPolizas(ArrayList<Row> rows, boolean isContra, String idAgente, String mail) {
+	public ResponsePolizaModel procesarPolizas(ArrayList<Row> rows, boolean isContra, String idAgente, String mail) {
 		log.info("Metodo procesarPolizas");
 		List<PolizaModel> poliza = new ArrayList<>();
 		ResponsePolizaModel responsePoliza = new ResponsePolizaModel();
@@ -466,7 +470,7 @@ public class HeaderServiceImpl implements IHeaderService {
 				log.warn("No se encontraron datos en la lista de rows.");
 				responsePoliza.setEstatus(false);
 				responsePoliza.setMensaje("No se encontraron datos.");
-				return poliza;
+				return responsePoliza;
 			}
 
 			// Buscar contratante con EsContratante = "S" o usar el primero
@@ -479,7 +483,7 @@ public class HeaderServiceImpl implements IHeaderService {
 				log.warn("No se encontró información del contratante en el registro seleccionado.");
 				responsePoliza.setEstatus(false);
 				responsePoliza.setMensaje("No se encontró información del contratante.");
-				return poliza;
+				return responsePoliza;
 			}
 
 			// Datos básicos del contratante
@@ -572,9 +576,20 @@ public class HeaderServiceImpl implements IHeaderService {
 			responsePoliza.setPoliza(poliza);
 			responsePoliza.setEsContratante(esContratantee);
 			responsePoliza.setObtenerJsonFamiliasParaLaRuleta(grupoDePolizasHardCode.obtenerJsonFamiliasParaLaRuleta());
-			TramitesObjecto obtenerTramites = obtenerTramites(poliza);
-			if(obtenerTramites != null) {
+			String urlConsultarTramites = servicesConfiguration.getUrlConsultarTramites();
+			TramitesObjecto obtenerTramites = obtenerTramites(poliza, urlConsultarTramites);
+			if (obtenerTramites != null) {
 				responsePoliza.setTramites(obtenerTramites);
+			}
+
+			ValidadorWhatsApp validadoWhatsApp = new ValidadorWhatsApp();
+			String productos = whatsappConfiguracion.getWhatsappProductos();
+			String api = whatsappConfiguracion.getWhatsappApi();
+			String contacto = whatsappConfiguracion.getWhatsappNumero();
+			InformacionWhatsApp info = validadoWhatsApp.obtenerInformacionWhatsApp(poliza, productos, api, contacto);
+			WhatsapModel whatsApp = new RespuestaWhatsApp().obtenerRespuestaParaWhatsApp(info);
+			if (whatsApp != null) {
+				responsePoliza.setInfoWhatsApp(whatsApp);
 			}
 
 			log.info("Pólizas procesadas: {}", new Gson().toJson(responsePoliza));
@@ -585,7 +600,7 @@ public class HeaderServiceImpl implements IHeaderService {
 			responsePoliza.setMensaje("Ocurrió un error al procesar las pólizas.");
 		}
 
-		return poliza;
+		return responsePoliza;
 	}
 
 	private GeneralesModel procesaModelGeneral(Contratante contratante, String nombre, String apellidoP,
@@ -1332,12 +1347,13 @@ public class HeaderServiceImpl implements IHeaderService {
 		return jsonArrayProximosPagos;
 	}
 
-	private TramitesObjecto obtenerTramites(List<PolizaModel> polizas) {
+	private TramitesObjecto obtenerTramites(List<PolizaModel> polizas, String urlConsultarTramites) {
 		if (polizas != null) {
 			TramitesUtility tramitesUtility = new TramitesUtility();
 			List<String> familiasUnicas = tramitesUtility.obtenerPolizasUnicas(polizas);
 			TramitesDAO tramitesDao = new TramitesDAO(restTemplate);
-			List<TramiteEntity> tramitesDeBaseDeDatos = tramitesDao.obtenerTramitesParaJson(familiasUnicas);
+			List<TramiteEntity> tramitesDeBaseDeDatos = tramitesDao.obtenerTramitesParaJson(familiasUnicas,
+					urlConsultarTramites);
 			TramitesJSON tramitesJson = new TramitesJSON();
 			TramitesObjecto tramites = tramitesJson.obtenerTramitesObjecto(tramitesDeBaseDeDatos);
 			return tramites;

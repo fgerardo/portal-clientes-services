@@ -6,6 +6,7 @@ import java.util.List;
 import org.json.JSONObject;
 
 import mx.com.allianz.util.DetalleDeSaldo;
+import mx.com.allianz.whatsap.model.WhatsapModel;
 
 public class ResponsePolizaModel implements Serializable {
 	/**
@@ -29,6 +30,7 @@ public class ResponsePolizaModel implements Serializable {
 	private List<PolizaModel> poliza;
 	private JSONObject obtenerJsonFamiliasParaLaRuleta;
 	private TramitesObjecto tramites;
+	private WhatsapModel infoWhatsApp;
 
 	public String getEsContratante() {
 		return esContratante;
@@ -166,6 +168,14 @@ public class ResponsePolizaModel implements Serializable {
 		this.tramites = tramites;
 	}
 
+	public WhatsapModel getInfoWhatsApp() {
+		return infoWhatsApp;
+	}
+
+	public void setInfoWhatsApp(WhatsapModel infoWhatsApp) {
+		this.infoWhatsApp = infoWhatsApp;
+	}
+
 	@Override
 	public String toString() {
 		return "ResponsePolizaModel [estatus=" + estatus + ", mensaje=" + mensaje + ", idClientePoliza="
@@ -174,7 +184,7 @@ public class ResponsePolizaModel implements Serializable {
 				+ ", generales=" + generales + ", detalleSaldo=" + detalleSaldo + ", alertas=" + alertas
 				+ ", notificaciones=" + notificaciones + ", proximosPagos=" + proximosPagos + ", poliza=" + poliza
 				+ ", obtenerJsonFamiliasParaLaRuleta=" + obtenerJsonFamiliasParaLaRuleta + ", tramites=" + tramites
-				+ "]";
+				+ ", infoWhatsApp=" + infoWhatsApp + "]";
 	}
 
 }

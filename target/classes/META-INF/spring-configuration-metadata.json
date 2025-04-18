@@ -19,6 +19,11 @@
       "name": "services",
       "type": "mx.com.allianz.config.ServicesConfiguration",
       "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
+      "name": "whatsapp",
+      "type": "mx.com.allianz.config.WhatsappConfiguracion",
+      "sourceType": "mx.com.allianz.config.WhatsappConfiguracion"
     }
   ],
   "properties": [
@@ -251,6 +256,21 @@
       "name": "services.usuario-authorization-services",
       "type": "java.lang.String",
       "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
+      "name": "whatsapp.whatsapp-api",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.WhatsappConfiguracion"
+    },
+    {
+      "name": "whatsapp.whatsapp-numero",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.WhatsappConfiguracion"
+    },
+    {
+      "name": "whatsapp.whatsapp-productos",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.WhatsappConfiguracion"
     }
   ],
   "hints": []
