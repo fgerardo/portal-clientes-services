@@ -108,7 +108,7 @@ public class LoginServiceImpl implements ILoginService {
 				} else {
 					if (responseData.getNumIntentos() <= 2 && responseData.getIdImagen() != null) {
 						// registarr en bitacora FGGG
-						return getImagenes(responseData.getIdImagen());
+						return getImagenes(responseData.getIdImagen(),inicarSesion);
 					} else {
 						response.setEstatus(2);
 						response.setMensaje("Ocurrio un error al consultar la Imagen.");
@@ -116,7 +116,7 @@ public class LoginServiceImpl implements ILoginService {
 					}
 				}
 			} else {
-				return consultarAllImagenes();
+				return consultarAllImagenes(inicarSesion);
 			}
 		} catch (Exception e) {
 			log.error("Error en conectar con el servicio de loginService {}", e);
@@ -124,7 +124,7 @@ public class LoginServiceImpl implements ILoginService {
 		}
 	}
 
-	private RespuestaGenerica consultarAllImagenes() {
+	private RespuestaGenerica consultarAllImagenes(LoginResponseDto iniciarSesion) {
 		log.info("Metodo consultarAllImagenes");
 		RespuestaGenerica respuesta = new RespuestaGenerica();
 		try {
@@ -166,6 +166,7 @@ public class LoginServiceImpl implements ILoginService {
 					// Return only the 18 unique images
 					respuesta.setEstatus(0);
 					respuesta.setFlujo("2");
+					respuesta.setRespuesta(iniciarSesion.getMensaje());
 					respuesta.setImg(selectedImages);
 					return respuesta; // Return the final object containing only the 18 images
 				} else {
@@ -182,7 +183,7 @@ public class LoginServiceImpl implements ILoginService {
 		}
 	}
 
-	private RespuestaGenerica getImagenes(String idImagen) {
+	private RespuestaGenerica getImagenes(String idImagen, LoginResponseDto iniciarSesion) {
 		RespuestaGenerica respuesta = new RespuestaGenerica();
 		try {
 			ApiImagenesResponse response = consultarImagenes();
@@ -237,6 +238,7 @@ public class LoginServiceImpl implements ILoginService {
 				// Set the response object with the selected images
 				respuesta.setEstatus(0);
 				respuesta.setFlujo("1");
+				respuesta.setRespuesta(iniciarSesion.getMensaje());
 				respuesta.setImg(selectedImages);
 				return respuesta; // Return the selected images list
 

@@ -12,13 +12,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.servlet.http.HttpServletRequest;
 import mx.com.allianz.commons.Codes;
-import mx.com.allianz.commons.model.RespuestaGenerica;
 import mx.com.allianz.commons.model.SingleResponse;
 import mx.com.allianz.exception.BusinessException;
-import mx.com.allianz.model.LoginRequestModel;
 import mx.com.allianz.model.ParametroRequestModel;
+import mx.com.allianz.model.ResponsePolizaModel;
 import mx.com.allianz.service.IHeaderService;
 
 @RestController
@@ -50,17 +48,17 @@ public class HeaderController {
 	 */
 	@CrossOrigin
 	@PostMapping(path = "/consultar/header")
-	public ResponseEntity<SingleResponse<RespuestaGenerica>> procesoHeader(@RequestBody ParametroRequestModel request) {
+	public ResponseEntity<SingleResponse<ResponsePolizaModel>> procesoHeader(@RequestBody ParametroRequestModel request) {
 		LOGGER.info("Inicia controller ==> HeaderController ==> procesoHeader ");
-		SingleResponse<RespuestaGenerica> response = new SingleResponse<>();
+		SingleResponse<ResponsePolizaModel> response = new SingleResponse<>();
 		try {
-			RespuestaGenerica responseModel = headerService.procesarHeader(request);
+			ResponsePolizaModel responseModel = headerService.procesarHeader(request);
 			response.done(responseModel, codes.getResponseCode(IGBL000));
 		} catch (BusinessException e) {
 			LOGGER.error("Error de negocio ==> BusinessException: ", e);
 			response.error(e.getResponseCode(), e);
 		}
-		LOGGER.info("Termina controller ==> NotificacionController ==> sendUrl.");
+		LOGGER.info("Termina controller ==> HeaderController ==> procesoHeader.");
 		return ResponseEntity.ok(response);
 	}
 }

@@ -48,7 +48,6 @@ import mx.com.allianz.cipher.service.Decrypt;
 import mx.com.allianz.cipher.service.DecryptResponse;
 import mx.com.allianz.client.SoapClient;
 import mx.com.allianz.commons.Codes;
-import mx.com.allianz.commons.model.RespuestaGenerica;
 import mx.com.allianz.config.ProductosConfiguration;
 import mx.com.allianz.config.ServicesConfiguration;
 import mx.com.allianz.config.WhatsappConfiguracion;
@@ -156,7 +155,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	@Override
-	public RespuestaGenerica procesarHeader(ParametroRequestModel request) throws BusinessException {
+	public ResponsePolizaModel procesarHeader(ParametroRequestModel request) throws BusinessException {
 		log.info("Entro metodo procesarHeader");
 		ResponseHeaderModel responseHeader = new ResponseHeaderModel();
 		try {
@@ -186,17 +185,15 @@ public class HeaderServiceImpl implements IHeaderService {
 			String idAgente = urlDecript.contains("idAgente") ? extractParameterValue(parametrosArreglo, 5) : null;
 			String codeSend = codCliIntegrador != null && !codCliIntegrador.isEmpty() ? codCliIntegrador : codCliente;
 
-			ResponsePolizaModel polizas = getPolizas(codeSend, idAgente, isContratante, emailURL);
-
 			responseHeader.setCodCliIntegrador(codeSend);
 			responseHeader.setIsContratante(isContratante);
-			log.info("POlizas {}", polizas);
+			return getPolizas(codeSend, idAgente, isContratante, emailURL);
+
 //			return new RespuestaGenerica(true, "OK", responseHeader);
 		} catch (Exception e) {
 			log.error("Error al procesar el header: {}", e.getMessage(), e);
 			throw new BusinessException(codes.getResponseCode("IGBL001"));
 		}
-		return null;
 	}
 
 	private String extractIdUsuario(String parametro) {
