@@ -208,6 +208,11 @@
       "sourceType": "mx.com.allianz.config.ServicesConfiguration"
     },
     {
+      "name": "services.servicio-pensiones",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
       "name": "services.servicio-polizas",
       "type": "java.lang.String",
       "sourceType": "mx.com.allianz.config.ServicesConfiguration"

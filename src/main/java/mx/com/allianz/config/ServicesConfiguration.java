@@ -24,6 +24,7 @@ public class ServicesConfiguration {
 	private String urlConsultarNotificacion;
 	private String urlConsultarImagenPerfil;
 	private String urlConsultarTramites;
+	private String servicioPensiones;
 
 	public String getUrlConsultarTramites() {
 		return urlConsultarTramites;
@@ -160,5 +161,14 @@ public class ServicesConfiguration {
 	public void setUrlConsultarNotificacion(String urlConsultarNotificacion) {
 		this.urlConsultarNotificacion = urlConsultarNotificacion;
 	}
+
+	public String getServicioPensiones() {
+		return servicioPensiones;
+	}
+
+	public void setServicioPensiones(String servicioPensiones) {
+		this.servicioPensiones = servicioPensiones;
+	}
+
 
 }

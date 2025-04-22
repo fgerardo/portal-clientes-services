@@ -32,6 +32,8 @@ public class ResponsePolizaModel implements Serializable {
 	private List<Vigencias> vigencias;
 	private TramitesObjecto tramites;
 	private WhatsapModel infoWhatsApp;
+	private ClientePensiones clientePensiones;
+	private ResumenSaldos sumaSaldo;
 
 	public String getEsContratante() {
 		return esContratante;
@@ -185,6 +187,22 @@ public class ResponsePolizaModel implements Serializable {
 		this.vigencias = vigencias;
 	}
 
+	public ClientePensiones getClientePensiones() {
+		return clientePensiones;
+	}
+
+	public void setClientePensiones(ClientePensiones clientePensiones) {
+		this.clientePensiones = clientePensiones;
+	}
+
+	public ResumenSaldos getSumaSaldo() {
+		return sumaSaldo;
+	}
+
+	public void setSumaSaldo(ResumenSaldos sumaSaldo) {
+		this.sumaSaldo = sumaSaldo;
+	}
+
 	@Override
 	public String toString() {
 		return "ResponsePolizaModel [estatus=" + estatus + ", mensaje=" + mensaje + ", idClientePoliza="
@@ -193,7 +211,8 @@ public class ResponsePolizaModel implements Serializable {
 				+ ", generales=" + generales + ", detalleSaldo=" + detalleSaldo + ", alertas=" + alertas
 				+ ", notificaciones=" + notificaciones + ", proximosPagos=" + proximosPagos + ", poliza=" + poliza
 				+ ", obtenerJsonFamiliasParaLaRuleta=" + obtenerJsonFamiliasParaLaRuleta + ", vigencias=" + vigencias
-				+ ", tramites=" + tramites + ", infoWhatsApp=" + infoWhatsApp + "]";
+				+ ", tramites=" + tramites + ", infoWhatsApp=" + infoWhatsApp + ", clientePensiones=" + clientePensiones
+				+ ", sumaSaldo=" + sumaSaldo + "]";
 	}
 
 }

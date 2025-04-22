@@ -10,11 +10,14 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -44,6 +47,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 
 import io.micrometer.common.util.StringUtils;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Unmarshaller;
+import mx.com.allianz.cipher.service.Crypt;
+import mx.com.allianz.cipher.service.CryptResponse;
 import mx.com.allianz.cipher.service.Decrypt;
 import mx.com.allianz.cipher.service.DecryptResponse;
 import mx.com.allianz.client.SoapClient;
@@ -57,6 +65,7 @@ import mx.com.allianz.model.AlertasModel;
 import mx.com.allianz.model.Asegurado;
 import mx.com.allianz.model.Beneficiario;
 import mx.com.allianz.model.BienAsegurado;
+import mx.com.allianz.model.ClientePensiones;
 import mx.com.allianz.model.CoberturaAsegurado;
 import mx.com.allianz.model.CoberturaBien;
 import mx.com.allianz.model.CoberturaInmueble;
@@ -88,10 +97,14 @@ import mx.com.allianz.model.ResponseGenerica;
 import mx.com.allianz.model.ResponseHeaderModel;
 import mx.com.allianz.model.ResponsePolizaModel;
 import mx.com.allianz.model.RespuestaPolizaModel;
+import mx.com.allianz.model.Respuestas;
+import mx.com.allianz.model.ResumenSaldos;
 import mx.com.allianz.model.Root;
 import mx.com.allianz.model.Row;
+import mx.com.allianz.model.SumaSaldo;
 import mx.com.allianz.model.TramitesObjecto;
 import mx.com.allianz.model.Vigencias;
+import mx.com.allianz.model.saldo.ContenedorModel;
 import mx.com.allianz.service.IHeaderService;
 import mx.com.allianz.util.DetalleDeSaldo;
 import mx.com.allianz.util.FiltradoAgenteUtil;
@@ -346,6 +359,15 @@ public class HeaderServiceImpl implements IHeaderService {
 		return decrypt.getOutPlainText();
 	}
 
+	private String encryptRequest(String encryptedText) {
+		log.info("Metodo encryptRequest");
+		encryptedText = encryptedText.replace(' ', '+');
+		Crypt requestCrypt = new Crypt();
+		requestCrypt.setInPlainText(encryptedText);
+		CryptResponse decrypt = soapClient.getEncrypt(requestCrypt);
+		return decrypt.getOutCrypText();
+	}
+
 	private String[] extractParameters(String urlDecript) {
 		log.info("Metodo extractParameters");
 		int prueba = urlDecript.lastIndexOf("?");
@@ -363,6 +385,9 @@ public class HeaderServiceImpl implements IHeaderService {
 			ResponsePolizaModel resultadoPolizas = resultadoPolizas(servicesAllianzPoliza.getRows(), esContratante,
 					idAgente, mail, idCliente);
 			log.info("Respuesta del servicio de pólizas: {}", resultadoPolizas);
+			Respuestas pensiones = isPensions(idCliente);
+			ClientePensiones clientePensiones = getPensiones(pensiones);
+			resultadoPolizas.setClientePensiones(clientePensiones);
 			return resultadoPolizas;
 		} catch (Exception e) {
 			log.error("Error al obtener pólizas: {}", e.getMessage(), e);
@@ -578,6 +603,7 @@ public class HeaderServiceImpl implements IHeaderService {
 			responsePoliza.setEsContratante(esContratantee);
 			responsePoliza.setObtenerJsonFamiliasParaLaRuleta(grupoDePolizasHardCode.obtenerJsonFamiliasParaLaRuleta());
 			responsePoliza.setVigencias(getVigenciasPoliza(idCliente, rows, idAgente));
+			responsePoliza.setSumaSaldo(getResumenSaldos(idCliente, rows));
 			String urlConsultarTramites = servicesConfiguration.getUrlConsultarTramites();
 			TramitesObjecto obtenerTramites = obtenerTramites(poliza, urlConsultarTramites);
 			if (obtenerTramites != null) {
@@ -1417,6 +1443,211 @@ public class HeaderServiceImpl implements IHeaderService {
 			}
 		}
 		return null;
+	}
+
+	public Respuestas isPensions(String codcli) {
+		log.info("Entró al método isPensions {}", codcli);
+		try {
+			String encodedAuth = encodedAuth();
+			String url = String.format(servicesConfiguration.getServicioPensiones(), codcli);
+			log.info("URL Servicio pensiones {}", url);
+
+			// Codificar parámetro "where" si es necesario
+			url = encodeWhereParamIfNeeded(url);
+
+			URI uri = new URI(url);
+			URL urlWeb = uri.toURL();
+
+			HttpURLConnection connection = (HttpURLConnection) urlWeb.openConnection();
+			connection.setRequestProperty("Authorization", "Basic " + encodedAuth);
+			connection.setRequestProperty("Accept", "application/xml"); // Importante para XML
+
+			int status = connection.getResponseCode();
+
+			if (status == HttpURLConnection.HTTP_OK) {
+				try (InputStream is = connection.getInputStream()) {
+					if (is.available() == 0) {
+						log.warn("El InputStream está vacío");
+						return null;
+					}
+					JAXBContext jaxbContext = JAXBContext.newInstance(Respuestas.class);
+					Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+					Respuestas r = (Respuestas) unmarshaller.unmarshal(is);
+					log.info("Objeto deserializado: {}", r);
+					return r;
+				} catch (IOException | JAXBException e) {
+					log.error("Error al deserializar la respuesta XML: {}", e.getMessage(), e);
+					throw new BusinessException(codes.getResponseCode("IGBL002"));
+				}
+			} else {
+				log.error("Solicitud fallida. Código HTTP: {}", status);
+				throw new BusinessException(codes.getResponseCode("IGBL003")); // Código HTTP no esperado
+			}
+		} catch (IOException | URISyntaxException e) {
+			log.error("Error en la conexión o formato de URL: {}", e.getMessage(), e);
+			throw new BusinessException(codes.getResponseCode("IGBL001")); // Error genérico
+		}
+	}
+
+	private ClientePensiones getPensiones(Respuestas pensiones) {
+		log.info("Entró al método getPensiones");
+		ClientePensiones clientePensiones = new ClientePensiones();
+		boolean isPensions = false;
+		if (pensiones != null) {
+			if (pensiones.getDatosRespuesta().getTipoclie().equalsIgnoreCase("P")) {
+				isPensions = true;
+				String codCliPensiones = pensiones.getDatosRespuesta().getCodcli();
+				log.info("Si es usuario con pensiones con codCli {}", codCliPensiones);
+				String encryptRequest = encryptRequest("CODCLI=" + codCliPensiones);
+				clientePensiones.setIdclie(encryptRequest);
+				clientePensiones.setPension(true);
+
+			} else {
+				clientePensiones.setPension(false);
+			}
+		}
+		if (isPensions) {
+			String nombre = validaTipoPension(pensiones.getDatosRespuesta().getNomter());
+			String apPaterno = validaTipoPension(pensiones.getDatosRespuesta().getApeter());
+			String apMaterno = validaTipoPension(pensiones.getDatosRespuesta().getApematter());
+			String nombreCompleto = nombre + " " + apPaterno + " " + apMaterno;
+
+			clientePensiones.setEmail(validaTipoPension(pensiones.getDatosRespuesta().getEmail()));
+			clientePensiones.setNombreCliente(nombreCompleto);
+			clientePensiones.setIdCliente(validaTipoPension(pensiones.getDatosRespuesta().getCodcli()));
+			clientePensiones.setRfc(validaTipoPension(pensiones.getDatosRespuesta().getRfc()));
+
+			clientePensiones.setRfcEncript(cifrarBase64(clientePensiones.getRfc()));
+			String date1 = getPreviousDate();
+			String mensajeFecha = "FECHA DE HOY: " + new Date() + "  FECHA HACE 1 DÍA:  " + date1;
+			log.info("FechaActualizacionPensiones: {}", mensajeFecha);
+
+			clientePensiones.setFechaUltimaActualizacion(date1);
+			clientePensiones.setFotoCliente("");
+		}
+		return clientePensiones;
+	}
+
+	private String validaTipoPension(String campo) {
+		log.info("Entró al método validaTipoPension");
+		String dato = "";
+		if (campo != null) {
+			Object obj = campo;
+			if (obj instanceof String) {
+				dato = obj.toString();
+			} else {
+				dato = "";
+			}
+		}
+		return dato;
+	}
+
+	public String cifrarBase64(String a) {
+		Base64.Encoder encoder = Base64.getEncoder();
+		String b = encoder.encodeToString(a.getBytes(StandardCharsets.UTF_8));
+		return b;
+	}
+
+	private String getPreviousDate() {
+		Calendar c = Calendar.getInstance();
+		c.add(Calendar.DATE, -1);
+		Date nowMinus15 = c.getTime();
+		SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
+		return format1.format(nowMinus15);
+	}
+
+	private ResumenSaldos getResumenSaldos(String idCliente, List<Row> servicioWeb) {
+		ResumenSaldos resumenSaldos = new ResumenSaldos();
+		if (idCliente != null && servicioWeb != null) {
+			resumenSaldos.setResumenAhorro(getResumenPorFamilia(idCliente, servicioWeb, Set.of("AHORRO", "INVERSION")));
+			resumenSaldos.setResumenSalud(
+					getResumenPorFamilia(idCliente, servicioWeb, Set.of("SALUD", "HOGAR", "PROTECCION")));
+			resumenSaldos.setResumenAutos("");
+		}
+		return resumenSaldos;
+	}
+
+	public List<SumaSaldo> getResumenPorFamilia(String idCliente, List<Row> servicioWeb,
+			Set<String> familiasPermitidas) {
+		log.info("Entró al método getResumenPorFamilia con familias: {}", familiasPermitidas);
+		if (idCliente == null || servicioWeb == null || servicioWeb.isEmpty()) {
+			return null;
+		}
+
+		Set<String> idepoliciesProcesadas = new HashSet<>();
+		List<SumaSaldo> response = new ArrayList<>();
+		List<ContenedorModel> arregloPesos = new ArrayList<>();
+		List<ContenedorModel> arregloDolares = new ArrayList<>();
+		double sumaPesos = 0.0;
+		double sumaDolares = 0.0;
+
+		try {
+			Row dataService = servicioWeb.stream()
+					.filter(row -> row.getContratante() != null
+							&& "S".equalsIgnoreCase(row.getContratante().getEsContratante()))
+					.findFirst().orElse(servicioWeb.get(0));
+
+			List<Poliza> polizas = dataService.getPolizas();
+			String[] productosVisibles = Optional.ofNullable(productosConfiguration.getProductosVisiblesPortal())
+					.orElse("").split(",");
+
+			for (Poliza poliza : polizas) {
+				String idepol = poliza.getiDEPOL();
+				if (!idepoliciesProcesadas.add(idepol)) {
+					continue; // Ya procesada
+				}
+
+				if (!isPolizaInhabiles(poliza, productosVisibles)) {
+					continue;
+				}
+
+				String familia = grupoDePolizasHardCode.setFamilia(poliza.getEmisor(), obtenerTodosLosProductos());
+				if (!familiasPermitidas.contains(familia.toUpperCase())) {
+					continue;
+				}
+
+				ContenedorModel contenedor = new ContenedorModel();
+				contenedor.setProducto(poliza.getEmisor() + "-" + poliza.getNumPoliza());
+				contenedor.setCodMoneda(poliza.getCodMoneda());
+				contenedor.setEmisor(poliza.getEmisor());
+				contenedor.setFamilia(familia);
+
+				List<LeyendaMosaico> leyenda = poliza.getLeyendaMosaico();
+				String valor = "0", monto = "0";
+				if (leyenda != null && !leyenda.isEmpty()) {
+					LeyendaMosaico lm = leyenda.get(0);
+					valor = Optional.ofNullable(lm.getValor()).orElse("0");
+					monto = Optional.ofNullable(lm.getMonto()).orElse("0");
+				}
+
+				contenedor.setSaldo(valor.equals("0") ? "0.00" : valor);
+
+				if ("PSM".equalsIgnoreCase(poliza.getCodMoneda())) {
+					arregloPesos.add(contenedor);
+					sumaPesos += Double.parseDouble(monto);
+				} else {
+					arregloDolares.add(contenedor);
+					sumaDolares += Double.parseDouble(monto);
+				}
+			}
+
+			SumaSaldo sumaSaldo = construirSumaSaldo(sumaPesos, sumaDolares, arregloPesos, arregloDolares);
+			response.add(sumaSaldo);
+		} catch (Exception e) {
+			log.error("Error en getResumenPorFamilia: {}", e.getMessage(), e);
+		}
+
+		return response;
+	}
+
+	private SumaSaldo construirSumaSaldo(double sumaPesos, double sumaDolares, List<ContenedorModel> arregloPesos,
+			List<ContenedorModel> arregloDolares) {
+		SumaSaldo sumaSaldo = new SumaSaldo();
+		sumaSaldo.setSumaPolizaPesos(FormatosUtil.sumaformatoNumerolRedoneadoDos(String.valueOf(sumaPesos), false));
+		sumaSaldo.setSumaPolizaDolares(FormatosUtil.sumaformatoNumerolRedoneadoDos(String.valueOf(sumaDolares), true));
+		sumaSaldo.setInfoPesos(arregloPesos);
+		sumaSaldo.setInfoDolares(arregloDolares);
+		return sumaSaldo;
 	}
 
 }
