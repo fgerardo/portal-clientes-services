@@ -159,7 +159,7 @@ public class DetalleDeSaldo {
 				itemAlternativaYSaldoDestino.put("aportaciones", itemAlternativaYSaldoOrigen.getString("aportaciones"));
 				itemAlternativaYSaldoDestino.put("saldoFinal", itemAlternativaYSaldoOrigen.getString("saldoFinal"));
 				itemAlternativaYSaldoDestino.put("anioMes", itemAlternativaYSaldoOrigen.getString("anioMes"));
-				itemAlternativaYSaldoDestino.put("mes", itemAlternativaYSaldoOrigen.getInt("mes"));
+				itemAlternativaYSaldoDestino.put("mes", String.valueOf(itemAlternativaYSaldoOrigen.getInt("mes")));
 
 				coberturas.put(itemAlternativaYSaldoDestino);
 				listaAlternativasMap.put(descBienAsegurado, coberturas);

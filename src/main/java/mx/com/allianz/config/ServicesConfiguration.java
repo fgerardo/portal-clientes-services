@@ -25,6 +25,7 @@ public class ServicesConfiguration {
 	private String urlConsultarImagenPerfil;
 	private String urlConsultarTramites;
 	private String servicioPensiones;
+	private String urlExpedienteCompletoRfc;
 
 	public String getUrlConsultarTramites() {
 		return urlConsultarTramites;
@@ -170,5 +171,12 @@ public class ServicesConfiguration {
 		this.servicioPensiones = servicioPensiones;
 	}
 
+	public String getUrlExpedienteCompletoRfc() {
+		return urlExpedienteCompletoRfc;
+	}
+
+	public void setUrlExpedienteCompletoRfc(String urlExpedienteCompletoRfc) {
+		this.urlExpedienteCompletoRfc = urlExpedienteCompletoRfc;
+	}
 
 }

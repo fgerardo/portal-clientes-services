@@ -34,6 +34,8 @@ public class Asegurado implements Serializable {
 	public String codCli;
 	@JsonProperty("MembresiaVRIM")
 	public String membresiaVRIM;
+	@JsonProperty("NoMembresiaVrim")
+	public String noMembresiaVrim;
 	@JsonProperty("Telemedicina")
 	public String telemedicina;
 	@JsonProperty("UsApp")
@@ -191,15 +193,23 @@ public class Asegurado implements Serializable {
 		this.telemedicina = telemedicina;
 	}
 
+	public String getNoMembresiaVrim() {
+		return noMembresiaVrim;
+	}
+
+	public void setNoMembresiaVrim(String noMembresiaVrim) {
+		this.noMembresiaVrim = noMembresiaVrim;
+	}
+
 	@Override
 	public String toString() {
 		return "Asegurado [idAsegurado=" + idAsegurado + ", nombreAsegurado=" + nombreAsegurado + ", parentesco="
 				+ parentesco + ", sexoAsegurado=" + sexoAsegurado + ", fechaNacimiento=" + fechaNacimiento
 				+ ", fechaAntiguedad=" + fechaAntiguedad + ", fechaIniVig=" + fechaIniVig + ", fechaFinVig="
 				+ fechaFinVig + ", stsAseg=" + stsAseg + ", indAsegTitular=" + indAsegTitular + ", codCli=" + codCli
-				+ ", membresiaVRIM=" + membresiaVRIM + ", telemedicina=" + telemedicina + ", usApp=" + usApp
-				+ ", IDEPOL_CODCLI=" + IDEPOL_CODCLI + ", IDEPOL_NUMCERT=" + IDEPOL_NUMCERT + ", numCert=" + numCert
-				+ ", coberturaAsegurado=" + coberturaAsegurado + "]";
+				+ ", membresiaVRIM=" + membresiaVRIM + ", noMembresiaVrim=" + noMembresiaVrim + ", telemedicina="
+				+ telemedicina + ", usApp=" + usApp + ", IDEPOL_CODCLI=" + IDEPOL_CODCLI + ", IDEPOL_NUMCERT="
+				+ IDEPOL_NUMCERT + ", numCert=" + numCert + ", coberturaAsegurado=" + coberturaAsegurado + "]";
 	}
 
 }

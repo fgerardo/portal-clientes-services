@@ -32,6 +32,7 @@ public class GeneralesModel implements Serializable {
 	private String caratulaPoliza;
 	private String IDEPOL;
 	private boolean esContratante;
+	private GeneralesEmpresarialModel generalesEmpresarial;
 
 	public boolean isEsContratante() {
 		return esContratante;
@@ -225,6 +226,14 @@ public class GeneralesModel implements Serializable {
 		IDEPOL = iDEPOL;
 	}
 
+	public GeneralesEmpresarialModel getGeneralesEmpresarial() {
+		return generalesEmpresarial;
+	}
+
+	public void setGeneralesEmpresarial(GeneralesEmpresarialModel generalesEmpresarial) {
+		this.generalesEmpresarial = generalesEmpresarial;
+	}
+
 	@Override
 	public String toString() {
 		return "GeneralesModel [nombreCliente=" + nombreCliente + ", clienteDesde=" + clienteDesde + ", idCliente="
@@ -235,7 +244,7 @@ public class GeneralesModel implements Serializable {
 				+ ", sumaAsegurada=" + sumaAsegurada + ", saldo=" + saldo + ", etiqueta=" + etiqueta + ", formaPago="
 				+ formaPago + ", familiaPoliza=" + familiaPoliza + ", codMoneda=" + codMoneda
 				+ ", fechaTerminoVigencia=" + fechaTerminoVigencia + ", caratulaPoliza=" + caratulaPoliza + ", IDEPOL="
-				+ IDEPOL + ", esContratante=" + esContratante + "]";
+				+ IDEPOL + ", esContratante=" + esContratante + ", generalesEmpresarial=" + generalesEmpresarial + "]";
 	}
 
 }

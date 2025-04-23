@@ -89,6 +89,7 @@ import mx.com.allianz.model.ParametroRequestModel;
 import mx.com.allianz.model.Poliza;
 import mx.com.allianz.model.PolizaLimpiaModel;
 import mx.com.allianz.model.PolizaModel;
+import mx.com.allianz.model.PolizasGMMAsegurado;
 import mx.com.allianz.model.Producto;
 import mx.com.allianz.model.ProductosConfiguracionModel;
 import mx.com.allianz.model.ProximosPagos;
@@ -104,6 +105,9 @@ import mx.com.allianz.model.Row;
 import mx.com.allianz.model.SumaSaldo;
 import mx.com.allianz.model.TramitesObjecto;
 import mx.com.allianz.model.Vigencias;
+import mx.com.allianz.model.response.Cliente;
+import mx.com.allianz.model.response.JsonParseModel;
+import mx.com.allianz.model.response.PolizaResponse;
 import mx.com.allianz.model.saldo.ContenedorModel;
 import mx.com.allianz.service.IHeaderService;
 import mx.com.allianz.util.DetalleDeSaldo;
@@ -578,7 +582,7 @@ public class HeaderServiceImpl implements IHeaderService {
 			}
 
 			poliza = polizaTempLimpioFinal;
-			log.info("PolizaLimpioFina {}", poliza);
+			log.info("PolizaLimpioFina {}", new Gson().toJson(poliza));
 			String esContratantee = contratante.getEsContratante();
 			log.info("{}", detalleDeSaldoObj.getJsonDetalleDeSaldo());
 			responsePoliza.setDetalleSaldo(detalleDeSaldoObj);
@@ -674,7 +678,7 @@ public class HeaderServiceImpl implements IHeaderService {
 				throw new DataAccessException(codes.getResponseCode("IGBL004"));
 			}
 
-			ArrayList<Poliza> polizas = rows.getPolizas();
+			List<Poliza> polizas = rows.getPolizas();
 			if (rows.getPolizasGMMAsegurado() != null) {
 				addGMMAseguradosToPolizas(rows, polizas);
 			}
@@ -685,7 +689,7 @@ public class HeaderServiceImpl implements IHeaderService {
 				PolizaLimpiaModel polizaLimpia = new PolizaLimpiaModel();
 				GeneralesModel generales = new GeneralesModel();
 				if (isPolizaInhabiles(poliza, polInhabilesArray)) {
-					procesarPoliza = procesarPoliza(poliza, respuesta, generales, polizaLimpia, contratante);
+					procesarPoliza = procesarPoliza(poliza, generales, polizaLimpia, contratante);
 					polizasLimpias.add(procesarPoliza);
 				}
 			}
@@ -698,12 +702,10 @@ public class HeaderServiceImpl implements IHeaderService {
 		return null;
 	}
 
-	private void addGMMAseguradosToPolizas(Row rows, ArrayList<Poliza> polizas) {
+	private void addGMMAseguradosToPolizas(Row rows, List<Poliza> polizas) {
 		log.info("Metodo addGMMAseguradosToPolizas");
-		for (Object o : rows.getPolizasGMMAsegurado()) {
-			if (o instanceof Poliza) {
-				polizas.add((Poliza) o);
-			}
+		for (Poliza polizaGmm : rows.getPolizasGMMAsegurado()) {
+			polizas.add(polizaGmm);
 		}
 	}
 
@@ -715,8 +717,8 @@ public class HeaderServiceImpl implements IHeaderService {
 		return Arrays.asList(polInhabilesArray).contains(emisor);
 	}
 
-	private PolizaModel procesarPoliza(Poliza poliza, RespuestaPolizaModel respuesta, GeneralesModel generales,
-			PolizaLimpiaModel polizaLimpia, Contratante contratante) {
+	private PolizaModel procesarPoliza(Poliza poliza, GeneralesModel generales, PolizaLimpiaModel polizaLimpia,
+			Contratante contratante) {
 		log.info("Metodo procesarPoliza");
 		try {
 			if (poliza == null) {
@@ -725,7 +727,7 @@ public class HeaderServiceImpl implements IHeaderService {
 			String emisor = Optional.ofNullable(poliza.getEmisor()).orElse("");
 			boolean mostrarPoliza = "S".equalsIgnoreCase(poliza.getMostrarPolizaAgente());
 
-			procesarGeneralesEmpresarial(respuesta, poliza, contratante, generales);
+			procesarGeneralesEmpresarial(poliza, contratante, generales);
 			procesarDatosProductos(generales, poliza);
 			procesarLeyendaMosaico(generales, poliza);
 			responsablePago(poliza, generales);
@@ -855,13 +857,12 @@ public class HeaderServiceImpl implements IHeaderService {
 
 	}
 
-	private void procesarGeneralesEmpresarial(RespuestaPolizaModel respuesta, Poliza polizas, Contratante contratante,
-			GeneralesModel generales) {
+	private void procesarGeneralesEmpresarial(Poliza polizas, Contratante contratante, GeneralesModel generales) {
 		log.info("Metodo procesarGeneralesEmpresarial");
 		// Check if the emitter is GMMC or GMMM
 		if (isEmisorGMMCOrGMMM(polizas)) {
 			GeneralesEmpresarialModel generalesEmpresarial = obtenerGeneralesEmpresariales(polizas);
-			respuesta.setGeneralesEmpresarial(generalesEmpresarial);
+			generales.setGeneralesEmpresarial(generalesEmpresarial);
 		}
 
 	}
@@ -1648,6 +1649,107 @@ public class HeaderServiceImpl implements IHeaderService {
 		sumaSaldo.setInfoPesos(arregloPesos);
 		sumaSaldo.setInfoDolares(arregloDolares);
 		return sumaSaldo;
+	}
+
+	private JsonParseModel jsonParse(ResponsePolizaModel resultadoPolizas) {
+		JsonParseModel jsonParse = new JsonParseModel();
+		try {
+			Cliente cliente = parseCliente(resultadoPolizas.getGenerales());
+			jsonParse.setCliente(cliente);
+
+			parsePolizas(resultadoPolizas.getPoliza(), cliente, jsonParse);
+
+			// Aquí puedes seguir usando cliente y polizas según tu lógica
+		} catch (Exception e) {
+			System.err.println("Error al parsear JSON de polizas: " + e.getMessage());
+			e.printStackTrace();
+		}
+		return jsonParse;
+	}
+
+	private Cliente parseCliente(GeneralesModel generales) {
+		Cliente cliente = new Cliente();
+
+		if (generales != null) {
+			cliente.setIsContratante(generales.isEsContratante());
+			cliente.setIdCliente(generales.getIdCliente());
+			cliente.setNombreCliente(generales.getNombreCliente());
+			cliente.setDesdeCliente(generales.getClienteDesde());
+			cliente.setFotoCliente(generales.getFotoCliente());
+			cliente.setEmail(generales.getEmail());
+			cliente.setFechaUltimaActualizacion(generales.getFechaUltimaActualizacion());
+			cliente.setTipoPersona(generales.getTipoPersona());
+			cliente.setRfc(generales.getRfc());
+		}
+
+		return cliente;
+	}
+
+	private void parsePolizas(List<PolizaModel> polizasArray, Cliente cliente, JsonParseModel jsonParse) {
+		List<PolizaResponse> polizas = new ArrayList<>();
+
+		for (PolizaModel polizaModel : Optional.ofNullable(polizasArray).orElse(Collections.emptyList())) {
+			if (polizaModel == null || polizaModel.getPoliza() == null)
+				continue;
+
+			PolizaLimpiaModel pol = polizaModel.getPoliza();
+			GeneralesModel generalesPoliza = pol.getGenerales();
+
+			if (generalesPoliza == null)
+				continue;
+
+			PolizaResponse polizaResponse = buildPolizaResponse(generalesPoliza);
+			polizas.add(polizaResponse);
+
+			assignTelefonoSiContratante(cliente, generalesPoliza, pol);
+
+			jsonParse.setVigencias(polizaModel.getResponsePoliza().getVigencias());
+			jsonParse.setSumasPolizas(polizaModel.getResponsePoliza().getSumaSaldo());
+			jsonParse.setProximosPagos(polizaModel.getResponsePoliza().getProximosPagos());
+			jsonParse.setPolizaStr(polizaModel.getResponsePoliza().getPoliza());
+
+			cliente.setPolizas(polizas);
+			jsonParse.setDetalleDeSaldo(polizaModel.getResponsePoliza().getDetalleSaldo());
+			jsonParse.setNotificaciones(polizaModel.getResponsePoliza().getNotificaciones());
+			jsonParse.setFamiliasParaLaRuleta(polizaModel.getResponsePoliza().getObtenerJsonFamiliasParaLaRuleta());
+			jsonParse.setTramitesStr(polizaModel.getResponsePoliza().getTramites());
+			jsonParse.setInfoWhatsApp(polizaModel.getResponsePoliza().getInfoWhatsApp());
+		}
+	}
+
+	private PolizaResponse buildPolizaResponse(GeneralesModel generales) {
+		PolizaResponse response = new PolizaResponse();
+
+		if (generales.getGeneralesEmpresarial() != null) {
+			var empresarial = generales.getGeneralesEmpresarial();
+			response.setNombreE(empresarial.getNombreE());
+			response.setDireccionE(empresarial.getDireccionE());
+			response.setTelefonoE(empresarial.getTelefonoE());
+			response.setRfcE(generales.getRfc());
+			response.setEmailE(generales.getEmail());
+		}
+
+		response.setSumaAsegurada(generales.getSumaAsegurada());
+		response.setFolletoProducto(generales.getFolletoProducto());
+		response.setNumeroPoliza(generales.getNumeroPoliza());
+		response.setTipoPoliza(generales.getTipoPoliza());
+		response.setEsContratante(generales.isEsContratante());
+		response.setEstatus(generales.getEstatus());
+		response.setFechaInicioVigencia(generales.getFechaInicioVigencia());
+		response.setFechaEmision(generales.getFechaEmision());
+		response.setSaldo(generales.getSaldo());
+		response.setFormaPago(generales.getFormaPago());
+		response.setFechaTerminoVigencia(generales.getFechaTerminoVigencia());
+
+		return response;
+	}
+
+	private void assignTelefonoSiContratante(Cliente cliente, GeneralesModel generales, PolizaLimpiaModel pol) {
+		if ((cliente.getTelefono() == null || cliente.getTelefono().isEmpty()) && generales.isEsContratante()
+				&& pol.getContratante() != null) {
+
+			cliente.setTelefono(pol.getContratante().getTelParticular());
+		}
 	}
 
 }

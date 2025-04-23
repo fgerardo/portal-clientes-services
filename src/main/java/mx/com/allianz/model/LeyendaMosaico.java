@@ -15,6 +15,8 @@ public class LeyendaMosaico implements Serializable {
 	public String valor;
 	@JsonProperty("Monto")
 	public String monto;
+	@JsonProperty("IDEPOL_CODCLI")
+	public String IDEPOL_CODCLI;
 
 	public String getEtiqueta() {
 		return etiqueta;
@@ -40,9 +42,18 @@ public class LeyendaMosaico implements Serializable {
 		this.monto = monto;
 	}
 
+	public String getIDEPOL_CODCLI() {
+		return IDEPOL_CODCLI;
+	}
+
+	public void setIDEPOL_CODCLI(String iDEPOL_CODCLI) {
+		IDEPOL_CODCLI = iDEPOL_CODCLI;
+	}
+
 	@Override
 	public String toString() {
-		return "LeyendaMosaico [etiqueta=" + etiqueta + ", valor=" + valor + ", monto=" + monto + "]";
+		return "LeyendaMosaico [etiqueta=" + etiqueta + ", valor=" + valor + ", monto=" + monto + ", IDEPOL_CODCLI="
+				+ IDEPOL_CODCLI + "]";
 	}
 
 }

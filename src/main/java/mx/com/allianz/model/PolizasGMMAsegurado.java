@@ -5,11 +5,12 @@ import java.util.ArrayList;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Poliza implements Serializable {
+public class PolizasGMMAsegurado implements Serializable {
+
 	/**
-	 * 
+	 * Serializador
 	 */
-	private static final long serialVersionUID = -416019918272137333L;
+	private static final long serialVersionUID = -3469393695116006427L;
 	@JsonProperty("IDEPOL") // Cambié aquí
 	public String iDEPOL;
 	@JsonProperty("Segmento")
@@ -91,14 +92,6 @@ public class Poliza implements Serializable {
 
 	public void setiDEPOL(String iDEPOL) {
 		this.iDEPOL = iDEPOL;
-	}
-
-	public String getContrato() {
-		return contrato;
-	}
-
-	public void setContrato(String contrato) {
-		this.contrato = contrato;
 	}
 
 	public String getSegmento() {
@@ -373,12 +366,12 @@ public class Poliza implements Serializable {
 		this.contratante = contratante;
 	}
 
-	public String getiDEPOL_CODCLI() {
-		return iDEPOL_CODCLI;
+	public String getContrato() {
+		return contrato;
 	}
 
-	public void setiDEPOL_CODCLI(String iDEPOL_CODCLI) {
-		this.iDEPOL_CODCLI = iDEPOL_CODCLI;
+	public void setContrato(String contrato) {
+		this.contrato = contrato;
 	}
 
 	public String getUsApp() {
@@ -389,10 +382,18 @@ public class Poliza implements Serializable {
 		this.usApp = usApp;
 	}
 
+	public String getiDEPOL_CODCLI() {
+		return iDEPOL_CODCLI;
+	}
+
+	public void setiDEPOL_CODCLI(String iDEPOL_CODCLI) {
+		this.iDEPOL_CODCLI = iDEPOL_CODCLI;
+	}
+
 	@Override
 	public String toString() {
-		return "Poliza [iDEPOL=" + iDEPOL + ", segmento=" + segmento + ", lob=" + lob + ", producto=" + producto
-				+ ", emisor=" + emisor + ", numPoliza=" + numPoliza + ", idRenovacion=" + idRenovacion
+		return "PolizasGMMAsegurado [iDEPOL=" + iDEPOL + ", segmento=" + segmento + ", lob=" + lob + ", producto="
+				+ producto + ", emisor=" + emisor + ", numPoliza=" + numPoliza + ", idRenovacion=" + idRenovacion
 				+ ", estatusPoliza=" + estatusPoliza + ", fechaEmision=" + fechaEmision + ", fecIniVig=" + fecIniVig
 				+ ", fecFinVig=" + fecFinVig + ", plan=" + plan + ", polizaAnterior=" + polizaAnterior + ", codCondGen="
 				+ codCondGen + ", codMoneda=" + codMoneda + ", mostrarPolizaAgente=" + mostrarPolizaAgente
@@ -402,8 +403,9 @@ public class Poliza implements Serializable {
 				+ responsablePago + ", estadoCuenta=" + estadoCuenta + ", numeroSolicitud=" + numeroSolicitud
 				+ ", vehiculo=" + vehiculo + ", numCert=" + numCert + ", iDEPOL_NUMCERT=" + iDEPOL_NUMCERT
 				+ ", iDEPOL_NUMCERT_USAPP=" + iDEPOL_NUMCERT_USAPP + ", iDCLIENTE_POLIZA=" + iDCLIENTE_POLIZA
-				+ ", esContratante=" + esContratante + ", iDESCONTRATANTEPOLIZA=" + iDESCONTRATANTEPOLIZA
-				+ ", contratante=" + contratante + ", contrato=" + contrato + "]";
+				+ ", iDEPOL_CODCLI=" + iDEPOL_CODCLI + ", esContratante=" + esContratante + ", iDESCONTRATANTEPOLIZA="
+				+ iDESCONTRATANTEPOLIZA + ", contratante=" + contratante + ", contrato=" + contrato + ", usApp=" + usApp
+				+ "]";
 	}
 
 }

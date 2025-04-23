@@ -70,10 +70,12 @@ public class Contratante implements Serializable {
 	public String esContratante;
 	@JsonProperty("IDESCONTRATANTEPOLIZA")
 	public String iDESCONTRATANTEPOLIZA;
+	@JsonProperty("_id")
 	public String _id;
 	@JsonProperty("Contratante")
 	public Contratante contratante;
 	private String apellidos;
+	
 
 	public String getIdCliente() {
 		return idCliente;
