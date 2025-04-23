@@ -248,6 +248,11 @@
       "sourceType": "mx.com.allianz.config.ServicesConfiguration"
     },
     {
+      "name": "services.url-expediente-completo-rfc",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
       "name": "services.url-registrar-bitacora-acceso",
       "type": "java.lang.String",
       "sourceType": "mx.com.allianz.config.ServicesConfiguration"

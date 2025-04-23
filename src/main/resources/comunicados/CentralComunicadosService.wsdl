@@ -1,0 +1,537 @@
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:sch0="http://serviceparameters.dto.centralcomunicados.allianz.com.mx" xmlns:sch1="http://dto.centralcomunicados.allianz.com.mx" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://serviceparameters.dto.centralcomunicados.allianz.com.mx" targetNamespace="http://serviceparameters.dto.centralcomunicados.allianz.com.mx">
+<wsdl:types>
+<xsd:schema xmlns="http://serviceparameters.dto.centralcomunicados.allianz.com.mx" xmlns:cc="http://dto.centralcomunicados.allianz.com.mx" xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://serviceparameters.dto.centralcomunicados.allianz.com.mx">
+<xsd:import namespace="http://dto.centralcomunicados.allianz.com.mx"/>
+<xsd:element name="RegistrarMovilRequest">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="movil" type="cc:MovilDto"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="RegistrarMovilResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="RegistrarMovil" type="cc:MovilesResponseDto"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="ActualizarMovilRequest">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="movil" type="cc:MovilDto"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="ActualizarMovilResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="ActualizarMovil" type="cc:MovilesResponseDto"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="ObtenerComunicadoRequest">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="idComunicado" type="xsd:long"/>
+<xsd:element name="versionComunicado" type="xsd:long"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="ObtenerComunicadoResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="Comunicado" type="cc:ComunicadoResponseMovilDto"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="ObtenerVersionComunicadoRequest">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="idComunicado" type="xsd:long"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="ObtenerVersionComunicadoResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="version" type="cc:VersionComunicadoResponseDto"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="ObtenerListaComunicadosByUsuarioRequest">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="correoElectronico" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="ObtenerListaComunicadosByUsuarioResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="listaComunicados" type="cc:ObtenerListaComunicadosByUsuarioResponseDto"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="ObtenerListaComunicadosByUsuarioAndCanalRequest">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="correoElectronico" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+<xsd:element name="ObtenerListaComunicadosByUsuarioAndCanalResponse">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="listaComunicados" type="cc:ObtenerListaComunicadosByUsuarioResponseDto"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+</xsd:schema>
+<xsd:schema xmlns:cc="http://dto.centralcomunicados.allianz.com.mx" xmlns:xsd="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://dto.centralcomunicados.allianz.com.mx">
+<xsd:element name="AudienciaDto" type="cc:AudienciaDto"/>
+<xsd:complexType name="AudienciaDto">
+<xsd:sequence>
+<xsd:element maxOccurs="unbounded" name="filtros" type="cc:FiltroDto"/>
+<xsd:element name="queryConstruct" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="CatalogoDto" type="cc:CatalogoDto"/>
+<xsd:complexType name="CatalogoDto">
+<xsd:sequence>
+<xsd:element name="idCatalogo" nillable="true" type="xsd:long"/>
+<xsd:element name="descripcion" nillable="true" type="xsd:string"/>
+<xsd:element name="idActivo" nillable="true" type="xsd:long"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="CodigoErrorDto" type="cc:CodigoErrorDto"/>
+<xsd:complexType name="CodigoErrorDto">
+<xsd:sequence>
+<xsd:element name="codigoError" nillable="true" type="xsd:string"/>
+<xsd:element name="mensajeError" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="ComunicadoDto" type="cc:ComunicadoDto"/>
+<xsd:complexType name="ComunicadoDto">
+<xsd:complexContent>
+<xsd:extension base="cc:AudienciaDto">
+<xsd:sequence>
+<xsd:element name="idComunicado" nillable="true" type="xsd:long"/>
+<xsd:element name="titulo" nillable="true" type="xsd:string"/>
+<xsd:element name="contenido" nillable="true" type="xsd:string"/>
+<xsd:element name="version" nillable="true" type="xsd:long"/>
+<xsd:element name="idEstatus" nillable="true" type="xsd:long"/>
+<xsd:element name="descEstatus" nillable="true" type="xsd:string"/>
+<xsd:element name="idCanal" nillable="true" type="xsd:long"/>
+<xsd:element name="descCanal" nillable="true" type="xsd:string"/>
+<xsd:element name="query" nillable="true" type="xsd:string"/>
+<xsd:element name="nombreTrigger" nillable="true" type="xsd:string"/>
+<xsd:element name="idTipoComunicado" nillable="true" type="xsd:long"/>
+<xsd:element name="descTipoComunicado" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:element name="ComunicadoRespuestaDto" type="cc:ComunicadoRespuestaDto"/>
+<xsd:complexType name="ComunicadoRespuestaDto">
+<xsd:sequence>
+<xsd:element name="codigoError" nillable="true" type="cc:CodigoErrorDto"/>
+<xsd:element name="resultado" nillable="true" type="xsd:boolean"/>
+<xsd:element name="idComunicado" nillable="true" type="xsd:long"/>
+<xsd:element name="version" nillable="true" type="xsd:long"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="ConsultaCatalogosDto" type="cc:ConsultaCatalogosDto"/>
+<xsd:complexType name="ConsultaCatalogosDto">
+<xsd:sequence>
+<xsd:element maxOccurs="unbounded" name="catalogos" nillable="true" type="cc:CatalogoDto"/>
+<xsd:element name="codigoError" nillable="true" type="cc:CodigoErrorDto"/>
+<xsd:element name="resultado" nillable="true" type="xsd:boolean"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="ContactosDto" type="cc:ContactosDto"/>
+<xsd:complexType name="ContactosDto">
+<xsd:sequence>
+<xsd:element name="nombre" nillable="true" type="xsd:string"/>
+<xsd:element name="appPaterno" nillable="true" type="xsd:string"/>
+<xsd:element name="appMaterno" nillable="true" type="xsd:string"/>
+<xsd:element name="correoElectronico" nillable="true" type="xsd:string"/>
+<xsd:element name="telefono" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="FiltroDto" type="cc:FiltroDto"/>
+<xsd:complexType name="FiltroDto">
+<xsd:sequence>
+<xsd:element name="idFiltro" nillable="true" type="xsd:long"/>
+<xsd:element name="idTipoAudiencia" nillable="true" type="xsd:long"/>
+<xsd:element name="tipoAudiencia" nillable="true" type="xsd:string"/>
+<xsd:element name="nombreColumna" nillable="true" type="xsd:string"/>
+<xsd:element name="valorColumna" nillable="true" type="xsd:string"/>
+<xsd:element name="condicional" nillable="true" type="xsd:long"/>
+<xsd:element name="condicionalEtiqueta" nillable="true" type="xsd:string"/>
+<xsd:element name="operacion" nillable="true" type="xsd:long"/>
+<xsd:element name="operacionEtiqueta" nillable="true" type="xsd:string"/>
+<xsd:element name="idTipoCampo" nillable="true" type="xsd:long"/>
+<xsd:element name="idCampo" nillable="true" type="xsd:long"/>
+<xsd:element name="idOperador" nillable="true" type="xsd:long"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="ProgramacionComunicadoDto" type="cc:ProgramacionComunicadoDto"/>
+<xsd:complexType name="ProgramacionComunicadoDto">
+<xsd:complexContent>
+<xsd:extension base="cc:ComunicadoDto">
+<xsd:sequence>
+<xsd:element name="idProgramacionComunicado" nillable="true" type="xsd:long"/>
+<xsd:element maxOccurs="unbounded" name="canales" nillable="true" type="cc:CatalogoDto"/>
+<xsd:element name="fechaEnvio" nillable="true" type="xsd:date"/>
+<xsd:element name="fechaEnvioString" nillable="true" type="xsd:string"/>
+<xsd:element name="horaEnvio" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:extension>
+</xsd:complexContent>
+</xsd:complexType>
+<xsd:element name="ConsultaRespuestaDto" type="cc:ConsultaRespuestaDto"/>
+<xsd:complexType name="ConsultaRespuestaDto">
+<xsd:sequence>
+<xsd:element name="codigoError" nillable="true" type="cc:CodigoErrorDto"/>
+<xsd:element maxOccurs="unbounded" name="listaComunicados" nillable="true" type="cc:ProgramacionComunicadoDto"/>
+<xsd:element name="detalleComunicado" nillable="true" type="cc:ProgramacionComunicadoDto"/>
+<xsd:element name="resultado" nillable="true" type="xsd:boolean"/>
+<xsd:element name="pagina" nillable="true" type="cc:PaginaDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="PaginaDto" type="cc:PaginaDto"/>
+<xsd:complexType name="PaginaDto">
+<xsd:sequence>
+<xsd:element name="numeroPagina" nillable="true" type="xsd:long"/>
+<xsd:element name="paginasDisponibles" nillable="true" type="xsd:long"/>
+<xsd:element maxOccurs="unbounded" name="listaComunicados" nillable="true" type="cc:ProgramacionComunicadoDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="ParametrosDto" type="cc:ParametrosDto"/>
+<xsd:complexType name="ParametrosDto">
+<xsd:sequence>
+<xsd:element name="fechaEnvio" nillable="true" type="xsd:date"/>
+<xsd:element name="horaEnvio" nillable="true" type="xsd:string"/>
+<xsd:element name="estatusComunicado" nillable="true" type="cc:CatalogoDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="ParametrosConsultaDto" type="cc:ParametrosConsultaDto"/>
+<xsd:complexType name="ParametrosConsultaDto">
+<xsd:sequence>
+<xsd:element name="fechaEnvio" nillable="true" type="xsd:date"/>
+<xsd:element name="titulo" nillable="true" type="xsd:string"/>
+<xsd:element name="estatusComunicado" nillable="true" type="xsd:int"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="CamposContactosDto" type="cc:CamposContactosDto"/>
+<xsd:complexType name="CamposContactosDto">
+<xsd:sequence>
+<xsd:element name="idCampo" nillable="true" type="xsd:int"/>
+<xsd:element name="campo" nillable="true" type="xsd:string"/>
+<xsd:element name="idTipoCampo" nillable="true" type="xsd:int"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="CamposContactosResponseDto" type="cc:CamposContactosResponseDto"/>
+<xsd:complexType name="CamposContactosResponseDto">
+<xsd:sequence>
+<xsd:element name="codigoError" nillable="true" type="cc:CodigoErrorDto"/>
+<xsd:element maxOccurs="unbounded" name="camposContactosDto" nillable="true" type="cc:CamposContactosDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="OperadoresDto" type="cc:OperadoresDto"/>
+<xsd:complexType name="OperadoresDto">
+<xsd:sequence>
+<xsd:element name="idOperador" nillable="true" type="xsd:int"/>
+<xsd:element name="operador" nillable="true" type="xsd:string"/>
+<xsd:element name="descripcionOperador" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="OperadoresResponseDto" type="cc:OperadoresResponseDto"/>
+<xsd:complexType name="OperadoresResponseDto">
+<xsd:sequence>
+<xsd:element name="codigoError" nillable="true" type="cc:CodigoErrorDto"/>
+<xsd:element maxOccurs="unbounded" name="OperadoresDto" nillable="true" type="cc:OperadoresDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="EntidadFederativaDto" type="cc:EntidadFederativaDto"/>
+<xsd:complexType name="EntidadFederativaDto">
+<xsd:sequence>
+<xsd:element name="claveEstdo" nillable="true" type="xsd:int"/>
+<xsd:element name="descEstado" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="EntidadFederativaResponseDto" type="cc:EntidadFederativaResponseDto"/>
+<xsd:complexType name="EntidadFederativaResponseDto">
+<xsd:sequence>
+<xsd:element name="codigoError" nillable="true" type="cc:CodigoErrorDto"/>
+<xsd:element maxOccurs="unbounded" name="EntidadFederativaDto" nillable="true" type="cc:EntidadFederativaDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="EjecutivosDto" type="cc:EjecutivosDto"/>
+<xsd:complexType name="EjecutivosDto">
+<xsd:sequence>
+<xsd:element name="claveEjecutivo" nillable="true" type="xsd:int"/>
+<xsd:element name="descEjecutivo" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="EjecutivoResponseDto" type="cc:EjecutivoResponseDto"/>
+<xsd:complexType name="EjecutivoResponseDto">
+<xsd:sequence>
+<xsd:element name="codigoError" nillable="true" type="cc:CodigoErrorDto"/>
+<xsd:element maxOccurs="unbounded" name="EjecutivosDto" nillable="true" type="cc:EjecutivosDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="OficinasDto" type="cc:OficinasDto"/>
+<xsd:complexType name="OficinasDto">
+<xsd:sequence>
+<xsd:element name="claveOficina" nillable="true" type="xsd:int"/>
+<xsd:element name="descOficina" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="OficinasResponseDto" type="cc:OficinasResponseDto"/>
+<xsd:complexType name="OficinasResponseDto">
+<xsd:sequence>
+<xsd:element name="codigoError" nillable="true" type="cc:CodigoErrorDto"/>
+<xsd:element maxOccurs="unbounded" name="OficinasDto" nillable="true" type="cc:OficinasDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="ProductosDto" type="cc:ProductosDto"/>
+<xsd:complexType name="ProductosDto">
+<xsd:sequence>
+<xsd:element name="claveProducto" nillable="true" type="xsd:string"/>
+<xsd:element name="descProducto" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="ProductosResponseDto" type="cc:ProductosResponseDto"/>
+<xsd:complexType name="ProductosResponseDto">
+<xsd:sequence>
+<xsd:element name="codigoError" nillable="true" type="cc:CodigoErrorDto"/>
+<xsd:element maxOccurs="unbounded" name="ProductosDto" nillable="true" type="cc:ProductosDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="ContactoDto" type="cc:ContactoDto"/>
+<xsd:complexType name="ContactoDto">
+<xsd:sequence>
+<xsd:element name="nombre" nillable="true" type="xsd:string"/>
+<xsd:element name="aPaterno" nillable="true" type="xsd:string"/>
+<xsd:element name="aMaterno" nillable="true" type="xsd:string"/>
+<xsd:element name="razonSocial" nillable="true" type="xsd:string"/>
+<xsd:element name="correo" nillable="true" type="xsd:string"/>
+<xsd:element name="telefonoP" nillable="true" type="xsd:string"/>
+<xsd:element name="telefonoA" nillable="true" type="xsd:string"/>
+<xsd:element name="descProducto" nillable="true" type="xsd:string"/>
+<xsd:element name="sexo" nillable="true" type="xsd:string"/>
+<xsd:element name="descEstado" nillable="true" type="xsd:string"/>
+<xsd:element name="descOficina" nillable="true" type="xsd:string"/>
+<xsd:element name="descEjecutivo" nillable="true" type="xsd:string"/>
+<xsd:element name="tipoAudiencia" nillable="true" type="xsd:string"/>
+<xsd:element name="edad" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="ContactosResponseDto" type="cc:ContactosResponseDto"/>
+<xsd:complexType name="ContactosResponseDto">
+<xsd:sequence>
+<xsd:element name="codigoError" nillable="true" type="cc:CodigoErrorDto"/>
+<xsd:element maxOccurs="unbounded" name="ContactoDto" nillable="true" type="cc:ContactoDto"/>
+<xsd:element name="pagina" nillable="true" type="cc:PaginaContactosDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="MovilDto" type="cc:MovilDto"/>
+<xsd:complexType name="MovilDto">
+<xsd:sequence>
+<xsd:element name="idMovil" nillable="true" type="xsd:string"/>
+<xsd:element name="correo" nillable="true" type="xsd:string"/>
+<xsd:element name="tipoMovil" nillable="true" type="xsd:long"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="MovilesResponseDto" type="cc:MovilesResponseDto"/>
+<xsd:complexType name="MovilesResponseDto">
+<xsd:sequence>
+<xsd:element name="codigoError" nillable="true" type="cc:CodigoErrorDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="ComunicadoResponseMovilDto" type="cc:ComunicadoResponseMovilDto"/>
+<xsd:complexType name="ComunicadoResponseMovilDto">
+<xsd:sequence>
+<xsd:element name="codigoError" nillable="true" type="cc:CodigoErrorDto"/>
+<xsd:element name="comunicado" nillable="true" type="cc:ComunicadoDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="VersionComunicadoDto" type="cc:VersionComunicadoDto"/>
+<xsd:complexType name="VersionComunicadoDto">
+<xsd:sequence>
+<xsd:element name="version" nillable="true" type="xsd:int"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="VersionComunicadoResponseDto" type="cc:VersionComunicadoResponseDto"/>
+<xsd:complexType name="VersionComunicadoResponseDto">
+<xsd:sequence>
+<xsd:element name="codigoError" nillable="true" type="cc:CodigoErrorDto"/>
+<xsd:element name="VersionComunicadoDto" nillable="true" type="cc:VersionComunicadoDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="ListaComunicadosDto" type="cc:ListaComunicadosDto"/>
+<xsd:complexType name="ListaComunicadosDto">
+<xsd:sequence>
+<xsd:element name="lista" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="ObtenerListaComunicadosByUsuarioResponseDto" type="cc:ObtenerListaComunicadosByUsuarioResponseDto"/>
+<xsd:complexType name="ObtenerListaComunicadosByUsuarioResponseDto">
+<xsd:sequence>
+<xsd:element name="codigoError" nillable="true" type="cc:CodigoErrorDto"/>
+<xsd:element name="listaComunicadosDto" nillable="true" type="cc:ListaComunicadosDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="AsocComunicadoAudienciaDto" type="cc:AsocComunicadoAudienciaDto"/>
+<xsd:complexType name="AsocComunicadoAudienciaDto">
+<xsd:sequence>
+<xsd:element name="idComunicado" nillable="true" type="xsd:long"/>
+<xsd:element name="version" nillable="true" type="xsd:long"/>
+<xsd:element name="correo" nillable="true" type="xsd:string"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:element name="PaginaContactosDto" type="cc:PaginaContactosDto"/>
+<xsd:complexType name="PaginaContactosDto">
+<xsd:sequence>
+<xsd:element name="numeroPagina" nillable="true" type="xsd:long"/>
+<xsd:element name="paginasDisponibles" nillable="true" type="xsd:long"/>
+<xsd:element maxOccurs="unbounded" name="listaContactos" nillable="true" type="cc:ContactoDto"/>
+</xsd:sequence>
+</xsd:complexType>
+<xsd:simpleType name="TiposCatalogos">
+<xsd:restriction base="xsd:string">
+<xsd:enumeration value="ACTIVOS"/>
+<xsd:enumeration value="CANALES"/>
+<xsd:enumeration value="TIPOS_AUDIENCIAS"/>
+<xsd:enumeration value="COLUMNAS_CONTACTOS"/>
+</xsd:restriction>
+</xsd:simpleType>
+</xsd:schema>
+</wsdl:types>
+<wsdl:message name="ObtenerComunicadoRequest">
+<wsdl:part element="tns:ObtenerComunicadoRequest" name="ObtenerComunicadoRequest"> </wsdl:part>
+</wsdl:message>
+<wsdl:message name="ObtenerListaComunicadosByUsuarioAndCanalRequest">
+<wsdl:part element="tns:ObtenerListaComunicadosByUsuarioAndCanalRequest" name="ObtenerListaComunicadosByUsuarioAndCanalRequest"> </wsdl:part>
+</wsdl:message>
+<wsdl:message name="RegistrarMovilRequest">
+<wsdl:part element="tns:RegistrarMovilRequest" name="RegistrarMovilRequest"> </wsdl:part>
+</wsdl:message>
+<wsdl:message name="RegistrarMovilResponse">
+<wsdl:part element="tns:RegistrarMovilResponse" name="RegistrarMovilResponse"> </wsdl:part>
+</wsdl:message>
+<wsdl:message name="ObtenerListaComunicadosByUsuarioResponse">
+<wsdl:part element="tns:ObtenerListaComunicadosByUsuarioResponse" name="ObtenerListaComunicadosByUsuarioResponse"> </wsdl:part>
+</wsdl:message>
+<wsdl:message name="ObtenerListaComunicadosByUsuarioAndCanalResponse">
+<wsdl:part element="tns:ObtenerListaComunicadosByUsuarioAndCanalResponse" name="ObtenerListaComunicadosByUsuarioAndCanalResponse"> </wsdl:part>
+</wsdl:message>
+<wsdl:message name="ObtenerVersionComunicadoRequest">
+<wsdl:part element="tns:ObtenerVersionComunicadoRequest" name="ObtenerVersionComunicadoRequest"> </wsdl:part>
+</wsdl:message>
+<wsdl:message name="ObtenerVersionComunicadoResponse">
+<wsdl:part element="tns:ObtenerVersionComunicadoResponse" name="ObtenerVersionComunicadoResponse"> </wsdl:part>
+</wsdl:message>
+<wsdl:message name="ObtenerComunicadoResponse">
+<wsdl:part element="tns:ObtenerComunicadoResponse" name="ObtenerComunicadoResponse"> </wsdl:part>
+</wsdl:message>
+<wsdl:message name="ObtenerListaComunicadosByUsuarioRequest">
+<wsdl:part element="tns:ObtenerListaComunicadosByUsuarioRequest" name="ObtenerListaComunicadosByUsuarioRequest"> </wsdl:part>
+</wsdl:message>
+<wsdl:message name="ActualizarMovilRequest">
+<wsdl:part element="tns:ActualizarMovilRequest" name="ActualizarMovilRequest"> </wsdl:part>
+</wsdl:message>
+<wsdl:message name="ActualizarMovilResponse">
+<wsdl:part element="tns:ActualizarMovilResponse" name="ActualizarMovilResponse"> </wsdl:part>
+</wsdl:message>
+<wsdl:portType name="OperacionesMovilServicePortType">
+<wsdl:operation name="ObtenerComunicado">
+<wsdl:input message="tns:ObtenerComunicadoRequest" name="ObtenerComunicadoRequest"> </wsdl:input>
+<wsdl:output message="tns:ObtenerComunicadoResponse" name="ObtenerComunicadoResponse"> </wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="ObtenerListaComunicadosByUsuarioAndCanal">
+<wsdl:input message="tns:ObtenerListaComunicadosByUsuarioAndCanalRequest" name="ObtenerListaComunicadosByUsuarioAndCanalRequest"> </wsdl:input>
+<wsdl:output message="tns:ObtenerListaComunicadosByUsuarioAndCanalResponse" name="ObtenerListaComunicadosByUsuarioAndCanalResponse"> </wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="RegistrarMovil">
+<wsdl:input message="tns:RegistrarMovilRequest" name="RegistrarMovilRequest"> </wsdl:input>
+<wsdl:output message="tns:RegistrarMovilResponse" name="RegistrarMovilResponse"> </wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="ObtenerListaComunicadosByUsuario">
+<wsdl:input message="tns:ObtenerListaComunicadosByUsuarioRequest" name="ObtenerListaComunicadosByUsuarioRequest"> </wsdl:input>
+<wsdl:output message="tns:ObtenerListaComunicadosByUsuarioResponse" name="ObtenerListaComunicadosByUsuarioResponse"> </wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="ObtenerVersionComunicado">
+<wsdl:input message="tns:ObtenerVersionComunicadoRequest" name="ObtenerVersionComunicadoRequest"> </wsdl:input>
+<wsdl:output message="tns:ObtenerVersionComunicadoResponse" name="ObtenerVersionComunicadoResponse"> </wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="ActualizarMovil">
+<wsdl:input message="tns:ActualizarMovilRequest" name="ActualizarMovilRequest"> </wsdl:input>
+<wsdl:output message="tns:ActualizarMovilResponse" name="ActualizarMovilResponse"> </wsdl:output>
+</wsdl:operation>
+</wsdl:portType>
+<wsdl:binding name="OperacionesMovilServicePortTypeSoap11" type="tns:OperacionesMovilServicePortType">
+<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+<wsdl:operation name="ObtenerComunicado">
+<soap:operation soapAction=""/>
+<wsdl:input name="ObtenerComunicadoRequest">
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output name="ObtenerComunicadoResponse">
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="ObtenerListaComunicadosByUsuarioAndCanal">
+<soap:operation soapAction=""/>
+<wsdl:input name="ObtenerListaComunicadosByUsuarioAndCanalRequest">
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output name="ObtenerListaComunicadosByUsuarioAndCanalResponse">
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="RegistrarMovil">
+<soap:operation soapAction=""/>
+<wsdl:input name="RegistrarMovilRequest">
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output name="RegistrarMovilResponse">
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="ObtenerListaComunicadosByUsuario">
+<soap:operation soapAction=""/>
+<wsdl:input name="ObtenerListaComunicadosByUsuarioRequest">
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output name="ObtenerListaComunicadosByUsuarioResponse">
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="ObtenerVersionComunicado">
+<soap:operation soapAction=""/>
+<wsdl:input name="ObtenerVersionComunicadoRequest">
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output name="ObtenerVersionComunicadoResponse">
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+<wsdl:operation name="ActualizarMovil">
+<soap:operation soapAction=""/>
+<wsdl:input name="ActualizarMovilRequest">
+<soap:body use="literal"/>
+</wsdl:input>
+<wsdl:output name="ActualizarMovilResponse">
+<soap:body use="literal"/>
+</wsdl:output>
+</wsdl:operation>
+</wsdl:binding>
+<wsdl:service name="OperacionesMovilService">
+<wsdl:port binding="tns:OperacionesMovilServicePortTypeSoap11" name="OperacionesMovilServicePortTypeSoap11">
+<soap:address location="http://apps.allianz.com.mx:80/CentralComunicados-0.0.1-SNAPSHOT/webservices"/>
+</wsdl:port>
+</wsdl:service>
+</wsdl:definitions>

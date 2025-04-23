@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<bindings xmlns="http://java.sun.com/xml/ns/jaxb" if-exists="true" version="2.1">
+      
+    <!--
+
+Este archivo ha sido generado por Eclipse Implementation of JAXB v2.3.7 
+Visite https://eclipse-ee4j.github.io/jaxb-ri 
+Todas las modificaciones realizadas en este archivo se perderán si se vuelve a compilar el esquema de origen. 
+Generado el: 2025.04.23 a las 01:25:46 PM CST 
+
+  -->
+      
+    <bindings xmlns:tns="http://serviceparameters.dto.centralcomunicados.allianz.com.mx" if-exists="true" scd="x-schema::tns">
+            
+        <schemaBindings map="false">
+                  
+            <package name="mx.com.allianz.central.comunicados.service"/>
+                
+        </schemaBindings>
+            
+        <bindings if-exists="true" scd="tns:RegistrarMovilRequest">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.RegistrarMovilRequest"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="tns:RegistrarMovilResponse">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.RegistrarMovilResponse"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="tns:ActualizarMovilRequest">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ActualizarMovilRequest"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="tns:ActualizarMovilResponse">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ActualizarMovilResponse"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="tns:ObtenerComunicadoRequest">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ObtenerComunicadoRequest"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="tns:ObtenerComunicadoResponse">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ObtenerComunicadoResponse"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="tns:ObtenerVersionComunicadoRequest">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ObtenerVersionComunicadoRequest"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="tns:ObtenerVersionComunicadoResponse">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ObtenerVersionComunicadoResponse"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="tns:ObtenerListaComunicadosByUsuarioRequest">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ObtenerListaComunicadosByUsuarioRequest"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="tns:ObtenerListaComunicadosByUsuarioResponse">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ObtenerListaComunicadosByUsuarioResponse"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="tns:ObtenerListaComunicadosByUsuarioAndCanalRequest">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ObtenerListaComunicadosByUsuarioAndCanalRequest"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="tns:ObtenerListaComunicadosByUsuarioAndCanalResponse">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ObtenerListaComunicadosByUsuarioAndCanalResponse"/>
+                
+        </bindings>
+          
+    </bindings>
+      
+    <bindings xmlns:tns="http://dto.centralcomunicados.allianz.com.mx" if-exists="true" scd="x-schema::tns">
+            
+        <schemaBindings map="false">
+                  
+            <package name="mx.com.allianz.central.comunicados.service"/>
+                
+        </schemaBindings>
+            
+        <bindings if-exists="true" scd="~tns:MovilDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.MovilDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:MovilesResponseDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.MovilesResponseDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:ComunicadoResponseMovilDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ComunicadoResponseMovilDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:VersionComunicadoResponseDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.VersionComunicadoResponseDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:ObtenerListaComunicadosByUsuarioResponseDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ObtenerListaComunicadosByUsuarioResponseDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:AudienciaDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.AudienciaDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:CatalogoDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.CatalogoDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:CodigoErrorDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.CodigoErrorDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:ComunicadoDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ComunicadoDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:ComunicadoRespuestaDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ComunicadoRespuestaDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:ConsultaCatalogosDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ConsultaCatalogosDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:ContactosDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ContactosDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:FiltroDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.FiltroDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:ProgramacionComunicadoDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ProgramacionComunicadoDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:ConsultaRespuestaDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ConsultaRespuestaDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:PaginaDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.PaginaDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:ParametrosDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ParametrosDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:ParametrosConsultaDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ParametrosConsultaDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:CamposContactosDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.CamposContactosDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:CamposContactosResponseDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.CamposContactosResponseDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:OperadoresDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.OperadoresDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:OperadoresResponseDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.OperadoresResponseDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:EntidadFederativaDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.EntidadFederativaDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:EntidadFederativaResponseDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.EntidadFederativaResponseDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:EjecutivosDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.EjecutivosDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:EjecutivoResponseDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.EjecutivoResponseDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:OficinasDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.OficinasDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:OficinasResponseDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.OficinasResponseDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:ProductosDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ProductosDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:ProductosResponseDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ProductosResponseDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:ContactoDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ContactoDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:ContactosResponseDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ContactosResponseDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:VersionComunicadoDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.VersionComunicadoDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:ListaComunicadosDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.ListaComunicadosDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:AsocComunicadoAudienciaDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.AsocComunicadoAudienciaDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:PaginaContactosDto">
+                  
+            <class ref="mx.com.allianz.central.comunicados.service.PaginaContactosDto"/>
+                
+        </bindings>
+            
+        <bindings if-exists="true" scd="~tns:TiposCatalogos">
+                  
+            <typesafeEnumClass ref="mx.com.allianz.central.comunicados.service.TiposCatalogos"/>
+                
+        </bindings>
+          
+    </bindings>
+    
+</bindings>
