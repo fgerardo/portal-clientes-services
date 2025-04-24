@@ -10,6 +10,8 @@ import org.springframework.ws.client.core.WebServiceTemplate;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.xml.bind.JAXBElement;
+import mx.com.allianz.central.comunicados.service.ObtenerComunicadoRequest;
+import mx.com.allianz.central.comunicados.service.ObtenerComunicadoResponse;
 import mx.com.allianz.cipher.service.Crypt;
 import mx.com.allianz.cipher.service.CryptResponse;
 import mx.com.allianz.cipher.service.CryptWithHtmlEscape;
@@ -49,6 +51,10 @@ public class SoapClient {
 	private Jaxb2Marshaller marshallerCipher;
 
 	@Autowired
+	@Qualifier("centralComunicados")
+	private Jaxb2Marshaller marshallerCipherCentralComunicados;
+
+	@Autowired
 	private ServicesConfiguration servicesConfiguration;
 
 	private WebServiceTemplate template;
@@ -67,6 +73,10 @@ public class SoapClient {
 
 	public DecryptResponse getDecrypt(Decrypt p) {
 		return invokeCipherServiceDecrypt(p, marshallerCipher);
+	}
+
+	public ObtenerComunicadoResponse getComunicado(ObtenerComunicadoRequest p) {
+		return invokeComunicadosService(p, marshallerCipherCentralComunicados);
 	}
 
 	private CryptResponse invokeCipherService(Crypt p, Jaxb2Marshaller marshaller) {
@@ -188,6 +198,29 @@ public class SoapClient {
 			throw new RuntimeException("SOAP call failed", e);
 		}
 		return null;
+	}
+
+	/**
+	 * Metodo para desencriptar una cadena, se invoca el servicio SOAP
+	 * https://portalb.allianz.com.mx/cipher/services/CipherWs
+	 * 
+	 * @param p Objeto con la cadena encriptada a desencriptar
+	 * @return objeto con la cadena desencriptada
+	 */
+	private ObtenerComunicadoResponse invokeComunicadosService(ObtenerComunicadoRequest p, Jaxb2Marshaller marshaller) {
+		template.setMarshaller(marshaller);
+		template.setUnmarshaller(marshaller);
+
+		// Realiza la invocación del servicio
+		ObtenerComunicadoResponse response = (ObtenerComunicadoResponse) template.marshalSendAndReceive(servicesConfiguration.getServicioAvisos(), p);
+
+		// Verifica que la respuesta es del tipo esperado
+		if (response instanceof ObtenerComunicadoResponse) {
+			return (ObtenerComunicadoResponse) response;
+		} else {
+			// Maneja el caso donde el tipo no es lo esperado
+			throw new IllegalStateException("Unexpected response type: " + response.getClass().getName());
+		}
 	}
 
 }

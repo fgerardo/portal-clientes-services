@@ -1,0 +1,1 @@
+package mx.com.allianz.central.comunicados.service;

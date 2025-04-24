@@ -123,6 +123,21 @@
       "sourceType": "mx.com.allianz.config.FolletosConfiguracion"
     },
     {
+      "name": "productos.disponible-envio-cobro",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ProductosConfiguration"
+    },
+    {
+      "name": "productos.envio-cobro-suceptibles",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ProductosConfiguration"
+    },
+    {
+      "name": "productos.pagos-linea-polizas-suceptibles",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ProductosConfiguration"
+    },
+    {
       "name": "productos.productos-ahorro",
       "type": "java.lang.String",
       "sourceType": "mx.com.allianz.config.ProductosConfiguration"
@@ -153,7 +168,22 @@
       "sourceType": "mx.com.allianz.config.ProductosConfiguration"
     },
     {
+      "name": "productos.productos-suceptibles-cuenta-saldo",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ProductosConfiguration"
+    },
+    {
+      "name": "productos.productos-validacion-contratante-empresariales",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ProductosConfiguration"
+    },
+    {
       "name": "productos.productos-visibles-portal",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ProductosConfiguration"
+    },
+    {
+      "name": "productos.programar-pagos-polizas-suceptibles",
       "type": "java.lang.String",
       "sourceType": "mx.com.allianz.config.ProductosConfiguration"
     },
@@ -193,6 +223,11 @@
       "sourceType": "mx.com.allianz.config.ServicesConfiguration"
     },
     {
+      "name": "services.servicio-avisos",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
       "name": "services.servicio-cifrado",
       "type": "java.lang.String",
       "sourceType": "mx.com.allianz.config.ServicesConfiguration"
@@ -224,6 +259,11 @@
     },
     {
       "name": "services.url-consultar-all-imagenes",
+      "type": "java.lang.String",
+      "sourceType": "mx.com.allianz.config.ServicesConfiguration"
+    },
+    {
+      "name": "services.url-consultar-avisos",
       "type": "java.lang.String",
       "sourceType": "mx.com.allianz.config.ServicesConfiguration"
     },

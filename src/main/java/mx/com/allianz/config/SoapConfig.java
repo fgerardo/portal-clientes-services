@@ -32,6 +32,14 @@ public class SoapConfig {
 		marshaller.setPackagesToScan("mx.com.allianz.cipher.service");
 		return marshaller;
 	}
+	
+	@Bean
+	@Qualifier("centralComunicados")
+	public Jaxb2Marshaller marshallerComunicados() {
+		Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
+		marshaller.setPackagesToScan("mx.com.allianz.central.comunicados.service");
+		return marshaller;
+	}
 
 	
 	@Bean

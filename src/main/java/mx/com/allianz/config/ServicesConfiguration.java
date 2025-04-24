@@ -26,6 +26,8 @@ public class ServicesConfiguration {
 	private String urlConsultarTramites;
 	private String servicioPensiones;
 	private String urlExpedienteCompletoRfc;
+	private String servicioAvisos;
+	private String urlConsultarAvisos;
 
 	public String getUrlConsultarTramites() {
 		return urlConsultarTramites;
@@ -177,6 +179,22 @@ public class ServicesConfiguration {
 
 	public void setUrlExpedienteCompletoRfc(String urlExpedienteCompletoRfc) {
 		this.urlExpedienteCompletoRfc = urlExpedienteCompletoRfc;
+	}
+
+	public String getServicioAvisos() {
+		return servicioAvisos;
+	}
+
+	public void setServicioAvisos(String servicioAvisos) {
+		this.servicioAvisos = servicioAvisos;
+	}
+
+	public String getUrlConsultarAvisos() {
+		return urlConsultarAvisos;
+	}
+
+	public void setUrlConsultarAvisos(String urlConsultarAvisos) {
+		this.urlConsultarAvisos = urlConsultarAvisos;
 	}
 
 }

@@ -5,12 +5,15 @@ import java.util.List;
 
 import org.json.JSONObject;
 
+import mx.com.allianz.model.ClientePensiones;
+import mx.com.allianz.model.ComunicadoJson;
 import mx.com.allianz.model.NotificacionModel;
 import mx.com.allianz.model.Pago;
 import mx.com.allianz.model.PolizaModel;
 import mx.com.allianz.model.ResumenSaldos;
 import mx.com.allianz.model.TramitesObjecto;
 import mx.com.allianz.model.Vigencias;
+import mx.com.allianz.model.expediente.ExpedienteEstatusRfcDTO;
 import mx.com.allianz.util.DetalleDeSaldo;
 import mx.com.allianz.whatsap.model.WhatsapModel;
 
@@ -33,7 +36,20 @@ public class JsonParseModel implements Serializable {
 	private ResumenSaldos sumasPolizas;
 	private String tipoPersona;
 	private String rfc;
+	private String rfcEncript;
+	private ExpedienteEstatusRfcDTO expedienteCompleto;
 	private String isContratante;
+	private List<ComunicadoJson> listaDeAvisos;
+	private String urlSiniestros;
+	private String productoPagoLineaSuceptibles;
+	private String productosProgramarPago;
+	private String productosEnvioCobro;
+	private String ProductoAhorros;
+	private String correoUsuario;
+	private String productosSuceptiblesEdoCuentaSaldos;
+	private String productosEmpresariales;
+	private String codCli;
+	private ClientePensiones clientePensiones;
 
 	public String getJsonString() {
 		return jsonString;
@@ -155,6 +171,110 @@ public class JsonParseModel implements Serializable {
 		this.isContratante = isContratante;
 	}
 
+	public String getRfcEncript() {
+		return rfcEncript;
+	}
+
+	public void setRfcEncript(String rfcEncript) {
+		this.rfcEncript = rfcEncript;
+	}
+
+	public ExpedienteEstatusRfcDTO getExpedienteCompleto() {
+		return expedienteCompleto;
+	}
+
+	public void setExpedienteCompleto(ExpedienteEstatusRfcDTO expedienteCompleto) {
+		this.expedienteCompleto = expedienteCompleto;
+	}
+
+	public List<ComunicadoJson> getListaDeAvisos() {
+		return listaDeAvisos;
+	}
+
+	public void setListaDeAvisos(List<ComunicadoJson> listaDeAvisos) {
+		this.listaDeAvisos = listaDeAvisos;
+	}
+
+	public String getUrlSiniestros() {
+		return urlSiniestros;
+	}
+
+	public void setUrlSiniestros(String urlSiniestros) {
+		this.urlSiniestros = urlSiniestros;
+	}
+
+	public String getProductoPagoLineaSuceptibles() {
+		return productoPagoLineaSuceptibles;
+	}
+
+	public void setProductoPagoLineaSuceptibles(String productoPagoLineaSuceptibles) {
+		this.productoPagoLineaSuceptibles = productoPagoLineaSuceptibles;
+	}
+
+	public String getProductosProgramarPago() {
+		return productosProgramarPago;
+	}
+
+	public void setProductosProgramarPago(String productosProgramarPago) {
+		this.productosProgramarPago = productosProgramarPago;
+	}
+
+	public String getProductosEnvioCobro() {
+		return productosEnvioCobro;
+	}
+
+	public void setProductosEnvioCobro(String productosEnvioCobro) {
+		this.productosEnvioCobro = productosEnvioCobro;
+	}
+
+	public String getProductoAhorros() {
+		return ProductoAhorros;
+	}
+
+	public void setProductoAhorros(String productoAhorros) {
+		ProductoAhorros = productoAhorros;
+	}
+
+	public String getCorreoUsuario() {
+		return correoUsuario;
+	}
+
+	public void setCorreoUsuario(String correoUsuario) {
+		this.correoUsuario = correoUsuario;
+	}
+
+	public String getProductosSuceptiblesEdoCuentaSaldos() {
+		return productosSuceptiblesEdoCuentaSaldos;
+	}
+
+	public void setProductosSuceptiblesEdoCuentaSaldos(String productosSuceptiblesEdoCuentaSaldos) {
+		this.productosSuceptiblesEdoCuentaSaldos = productosSuceptiblesEdoCuentaSaldos;
+	}
+
+	public String getProductosEmpresariales() {
+		return productosEmpresariales;
+	}
+
+	public void setProductosEmpresariales(String productosEmpresariales) {
+		this.productosEmpresariales = productosEmpresariales;
+	}
+
+	public String getCodCli() {
+		return codCli;
+	}
+
+	public void setCodCli(String codCli) {
+		this.codCli = codCli;
+	}
+
+	public ClientePensiones getClientePensiones() {
+		return clientePensiones;
+	}
+
+	public void setClientePensiones(ClientePensiones clientePensiones) {
+		this.clientePensiones = clientePensiones;
+	}
+
 	@Override
 	public String toString() {
 		return "JsonParseModel [jsonString=" + jsonString + ", cliente=" + cliente + ", polizaStr=" + polizaStr
@@ -162,7 +282,14 @@ public class JsonParseModel implements Serializable {
 				+ detalleDeSaldo + ", notificaciones=" + notificaciones + ", familiasParaLaRuleta="
 				+ familiasParaLaRuleta + ", vigencias=" + vigencias + ", version_portal=" + version_portal
 				+ ", InfoWhatsApp=" + InfoWhatsApp + ", sumasPolizas=" + sumasPolizas + ", tipoPersona=" + tipoPersona
-				+ ", rfc=" + rfc + ", isContratante=" + isContratante + "]";
+				+ ", rfc=" + rfc + ", rfcEncript=" + rfcEncript + ", expedienteCompleto=" + expedienteCompleto
+				+ ", isContratante=" + isContratante + ", listaDeAvisos=" + listaDeAvisos + ", urlSiniestros="
+				+ urlSiniestros + ", productoPagoLineaSuceptibles=" + productoPagoLineaSuceptibles
+				+ ", productosProgramarPago=" + productosProgramarPago + ", productosEnvioCobro=" + productosEnvioCobro
+				+ ", ProductoAhorros=" + ProductoAhorros + ", correoUsuario=" + correoUsuario
+				+ ", productosSuceptiblesEdoCuentaSaldos=" + productosSuceptiblesEdoCuentaSaldos
+				+ ", productosEmpresariales=" + productosEmpresariales + ", codCli=" + codCli + ", clientePensiones="
+				+ clientePensiones + "]";
 	}
 
 }

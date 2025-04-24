@@ -1,7 +1,9 @@
 package mx.com.allianz.service.impl;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -50,6 +52,8 @@ import io.micrometer.common.util.StringUtils;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
+import mx.com.allianz.central.comunicados.service.ObtenerComunicadoRequest;
+import mx.com.allianz.central.comunicados.service.ObtenerComunicadoResponse;
 import mx.com.allianz.cipher.service.Crypt;
 import mx.com.allianz.cipher.service.CryptResponse;
 import mx.com.allianz.cipher.service.Decrypt;
@@ -71,6 +75,7 @@ import mx.com.allianz.model.CoberturaBien;
 import mx.com.allianz.model.CoberturaInmueble;
 import mx.com.allianz.model.Coberturas;
 import mx.com.allianz.model.CoberturasModel;
+import mx.com.allianz.model.ComunicadoJson;
 import mx.com.allianz.model.ContenidoModel;
 import mx.com.allianz.model.ContenidoModel.TipoCliente;
 import mx.com.allianz.model.Contratante;
@@ -89,7 +94,6 @@ import mx.com.allianz.model.ParametroRequestModel;
 import mx.com.allianz.model.Poliza;
 import mx.com.allianz.model.PolizaLimpiaModel;
 import mx.com.allianz.model.PolizaModel;
-import mx.com.allianz.model.PolizasGMMAsegurado;
 import mx.com.allianz.model.Producto;
 import mx.com.allianz.model.ProductosConfiguracionModel;
 import mx.com.allianz.model.ProximosPagos;
@@ -105,11 +109,14 @@ import mx.com.allianz.model.Row;
 import mx.com.allianz.model.SumaSaldo;
 import mx.com.allianz.model.TramitesObjecto;
 import mx.com.allianz.model.Vigencias;
+import mx.com.allianz.model.expediente.ExpedienteEstatusRfcDTO;
+import mx.com.allianz.model.expediente.RespuestaServicioExpedienteEstatusRfc;
 import mx.com.allianz.model.response.Cliente;
 import mx.com.allianz.model.response.JsonParseModel;
 import mx.com.allianz.model.response.PolizaResponse;
 import mx.com.allianz.model.saldo.ContenedorModel;
 import mx.com.allianz.service.IHeaderService;
+import mx.com.allianz.util.AvisosImpl;
 import mx.com.allianz.util.DetalleDeSaldo;
 import mx.com.allianz.util.FiltradoAgenteUtil;
 import mx.com.allianz.util.FolletoProductoUtil;
@@ -149,6 +156,9 @@ public class HeaderServiceImpl implements IHeaderService {
 	private NotificacionesImpl notificacionImpl;
 
 	@Autowired
+	private AvisosImpl avisosImpl;
+
+	@Autowired
 	private FiltradoAgenteUtil filtradoUtil;
 
 	@Autowired
@@ -156,6 +166,7 @@ public class HeaderServiceImpl implements IHeaderService {
 
 	@Autowired
 	private SoapClient soapClient;
+
 	@Autowired
 	private ImagenPerfilUtil imagenPerfilUtil;
 
@@ -172,7 +183,7 @@ public class HeaderServiceImpl implements IHeaderService {
 	}
 
 	@Override
-	public ResponsePolizaModel procesarHeader(ParametroRequestModel request) throws BusinessException {
+	public JsonParseModel procesarHeader(ParametroRequestModel request) throws BusinessException {
 		log.info("Entro metodo procesarHeader");
 		ResponseHeaderModel responseHeader = new ResponseHeaderModel();
 		try {
@@ -379,7 +390,7 @@ public class HeaderServiceImpl implements IHeaderService {
 		return parametrosJuntos.split("&");
 	}
 
-	private ResponsePolizaModel getPolizas(String idCliente, String idAgente, boolean isContratante, String mail) {
+	private JsonParseModel getPolizas(String idCliente, String idAgente, boolean isContratante, String mail) {
 		log.info("Metodo getPolizas idCliente: {}, mail: {}", idCliente, mail);
 		try {
 			String servicioWeb = construirUrlPolizas(idCliente, isContratante, mail);
@@ -392,7 +403,35 @@ public class HeaderServiceImpl implements IHeaderService {
 			Respuestas pensiones = isPensions(idCliente);
 			ClientePensiones clientePensiones = getPensiones(pensiones);
 			resultadoPolizas.setClientePensiones(clientePensiones);
-			return resultadoPolizas;
+
+			JsonParseModel jsonParse = jsonParse(resultadoPolizas);
+			String rfc = jsonParse.getCliente().getRfc();
+
+			if (rfc != null && !rfc.isEmpty()) {
+				RespuestaServicioExpedienteEstatusRfc expedienteCompleto = isExpedienteCompleto(rfc);
+				ExpedienteEstatusRfcDTO responseDto = expedienteCompleto.getResponse();
+				if (responseDto != null) {
+					jsonParse.setExpedienteCompleto(responseDto);
+
+				} else {
+					log.info("Error en la peticion de expediente/estatus/rfc");
+				}
+			}
+			jsonParse.setRfcEncript(cifrarBase64(rfc));
+			jsonParse.setListaDeAvisos(getAvisos(idCliente));
+			jsonParse.setProductoPagoLineaSuceptibles(productosConfiguration.getPagosLineaPolizasSuceptibles());
+			jsonParse.setProductosProgramarPago(productosConfiguration.getProgramarPagosPolizasSuceptibles());
+			jsonParse.setProductosEnvioCobro(productosConfiguration.getEnvioCobroSuceptibles());
+			jsonParse.setProductoAhorros(productosConfiguration.getProductosAhorro());
+			jsonParse.setProductosSuceptiblesEdoCuentaSaldos(
+					productosConfiguration.getProductosSuceptiblesCuentaSaldo());
+			jsonParse
+					.setProductosEmpresariales(productosConfiguration.getProductosValidacionContratanteEmpresariales());
+
+			jsonParse.setUrlSiniestros(getValoresDeSiniestros(jsonParse.getCliente()));
+			jsonParse.setCodCli(idCliente);
+
+			return jsonParse;
 		} catch (Exception e) {
 			log.error("Error al obtener pólizas: {}", e.getMessage(), e);
 			throw new BusinessException(codes.getResponseCode("IGBL001"));
@@ -1656,8 +1695,9 @@ public class HeaderServiceImpl implements IHeaderService {
 		try {
 			Cliente cliente = parseCliente(resultadoPolizas.getGenerales());
 			jsonParse.setCliente(cliente);
+			jsonParse.setClientePensiones(resultadoPolizas.getClientePensiones());
 
-			parsePolizas(resultadoPolizas.getPoliza(), cliente, jsonParse);
+			parsePolizas(resultadoPolizas, cliente, jsonParse);
 
 			// Aquí puedes seguir usando cliente y polizas según tu lógica
 		} catch (Exception e) {
@@ -1685,10 +1725,10 @@ public class HeaderServiceImpl implements IHeaderService {
 		return cliente;
 	}
 
-	private void parsePolizas(List<PolizaModel> polizasArray, Cliente cliente, JsonParseModel jsonParse) {
+	private void parsePolizas(ResponsePolizaModel polizasArray, Cliente cliente, JsonParseModel jsonParse) {
 		List<PolizaResponse> polizas = new ArrayList<>();
 
-		for (PolizaModel polizaModel : Optional.ofNullable(polizasArray).orElse(Collections.emptyList())) {
+		for (PolizaModel polizaModel : polizasArray.getPoliza()) {
 			if (polizaModel == null || polizaModel.getPoliza() == null)
 				continue;
 
@@ -1702,19 +1742,22 @@ public class HeaderServiceImpl implements IHeaderService {
 			polizas.add(polizaResponse);
 
 			assignTelefonoSiContratante(cliente, generalesPoliza, pol);
-
-			jsonParse.setVigencias(polizaModel.getResponsePoliza().getVigencias());
-			jsonParse.setSumasPolizas(polizaModel.getResponsePoliza().getSumaSaldo());
-			jsonParse.setProximosPagos(polizaModel.getResponsePoliza().getProximosPagos());
-			jsonParse.setPolizaStr(polizaModel.getResponsePoliza().getPoliza());
-
-			cliente.setPolizas(polizas);
-			jsonParse.setDetalleDeSaldo(polizaModel.getResponsePoliza().getDetalleSaldo());
-			jsonParse.setNotificaciones(polizaModel.getResponsePoliza().getNotificaciones());
-			jsonParse.setFamiliasParaLaRuleta(polizaModel.getResponsePoliza().getObtenerJsonFamiliasParaLaRuleta());
-			jsonParse.setTramitesStr(polizaModel.getResponsePoliza().getTramites());
-			jsonParse.setInfoWhatsApp(polizaModel.getResponsePoliza().getInfoWhatsApp());
 		}
+
+		jsonParse.setVigencias(polizasArray.getVigencias() != null ? polizasArray.getVigencias() : null);
+		jsonParse.setSumasPolizas(polizasArray.getSumaSaldo() != null ? polizasArray.getSumaSaldo() : null);
+		jsonParse.setProximosPagos(polizasArray.getProximosPagos() != null ? polizasArray.getProximosPagos() : null);
+		jsonParse.setPolizaStr(polizasArray.getPoliza() != null ? polizasArray.getPoliza() : null);
+
+		cliente.setPolizas(polizas);
+		jsonParse.setDetalleDeSaldo(polizasArray.getDetalleSaldo() != null ? polizasArray.getDetalleSaldo() : null);
+		jsonParse.setNotificaciones(polizasArray.getNotificaciones() != null ? polizasArray.getNotificaciones() : null);
+		jsonParse.setFamiliasParaLaRuleta(polizasArray.getObtenerJsonFamiliasParaLaRuleta() != null
+				? polizasArray.getObtenerJsonFamiliasParaLaRuleta()
+				: null);
+		jsonParse.setTramitesStr(polizasArray.getTramites() != null ? polizasArray.getTramites() : null);
+		jsonParse.setInfoWhatsApp(polizasArray.getInfoWhatsApp() != null ? polizasArray.getInfoWhatsApp() : null);
+
 	}
 
 	private PolizaResponse buildPolizaResponse(GeneralesModel generales) {
@@ -1750,6 +1793,102 @@ public class HeaderServiceImpl implements IHeaderService {
 
 			cliente.setTelefono(pol.getContratante().getTelParticular());
 		}
+	}
+
+	public RespuestaServicioExpedienteEstatusRfc isExpedienteCompleto(String rfc) {
+		log.info("-----------Metodo isExpedienteCompleto----------");
+		String urlServicio = servicesConfiguration.getUrlExpedienteCompletoRfc() + rfc;
+		log.info("Endpoint del servicio: " + urlServicio);
+
+		log.info("--------------------------");
+		log.info("Se consume servicio GET");
+		log.info("--------------------------");
+		StringBuilder response = new StringBuilder();
+		String responseLine = null;
+		RespuestaServicioExpedienteEstatusRfc respuestaServicio = new RespuestaServicioExpedienteEstatusRfc();
+		try {
+
+			// Codificar parámetro "where" si es necesario
+			urlServicio = encodeWhereParamIfNeeded(urlServicio);
+
+			URI uri = new URI(urlServicio);
+			URL urlWeb = uri.toURL();
+
+			HttpURLConnection connection = (HttpURLConnection) urlWeb.openConnection();
+			connection.setRequestMethod("GET");
+
+			if (connection.getResponseCode() != 200) {
+				throw new RuntimeException("Failed : HTTP Error code : " + connection.getResponseCode());
+			}
+			InputStreamReader in = new InputStreamReader(connection.getInputStream());
+			BufferedReader br = new BufferedReader(in);
+			Gson gson = new Gson();
+			while ((responseLine = br.readLine()) != null) {
+				respuestaServicio = gson.fromJson((String) responseLine, RespuestaServicioExpedienteEstatusRfc.class);
+				System.out.println("Línea: " + respuestaServicio.getResponse());
+				response.append(responseLine.trim());
+			}
+
+			connection.disconnect();
+
+		} catch (Exception e) {
+			System.out.println("Exception in NetClientGet:- " + e);
+		}
+		return respuestaServicio;
+	}
+
+	public List<ComunicadoJson> getAvisos(String idCliente) throws BusinessException {
+		String idsComunicados = "610,611";
+		String[] ids = idsComunicados.split(",");
+		ComunicadoJson comunicadoJson = new ComunicadoJson();
+		List<ComunicadoJson> listaComunicados = new ArrayList<>();
+		for (String string : ids) {
+			int idComunicado = Integer.parseInt(string);
+			int version = 1;
+			ObtenerComunicadoRequest request = new ObtenerComunicadoRequest();
+			request.setIdComunicado(idComunicado);
+			request.setVersionComunicado(version);
+
+			ObtenerComunicadoResponse comunicado = soapClient.getComunicado(request);
+			String codigoError = comunicado.getComunicado().getCodigoError().getCodigoError();
+			if (!"ERR_00_00029".equals(codigoError)) {
+				String idAviso = "aviso-" + comunicado.getComunicado().getComunicado().getIdComunicado() + "-"
+						+ comunicado.getComunicado().getComunicado().getVersion() + "-" + idCliente;
+
+				comunicadoJson.setIdComunicado(idAviso);
+				comunicadoJson.setTituloComunicado(comunicado.getComunicado().getComunicado().getTitulo());
+				comunicadoJson.setVersionComunicado(comunicado.getComunicado().getComunicado().getVersion());
+				// Elimina los caracteres \r\n del contenido
+				String contenidoComunicado = comunicado.getComunicado().getComunicado().getContenido();
+				// Elimina saltos de línea, tabulaciones y otros caracteres de control
+				contenidoComunicado = contenidoComunicado.replaceAll("[\\r\\n\\t]+", " ");
+				contenidoComunicado = contenidoComunicado.replaceAll("\\s{2,}", " ");
+				contenidoComunicado = contenidoComunicado.trim();
+
+				comunicadoJson.setContenidoComunicado(contenidoComunicado);
+
+				boolean encontrarAviso = avisosImpl.encontrarAviso(idAviso);
+				comunicadoJson.setEstatus(encontrarAviso);
+				version++;
+				listaComunicados.add(comunicadoJson);
+
+			}
+		}
+		return listaComunicados;
+
+	}
+
+	private String getValoresDeSiniestros(Cliente cliente) {
+		String urEncriptada = "";
+
+		try {
+			urEncriptada = encryptRequest("id=" + cliente.getIdCliente() + " email=" + cliente.getEmail());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return urEncriptada;
+
 	}
 
 }

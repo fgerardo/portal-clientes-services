@@ -14,6 +14,12 @@ public class ProductosConfiguration {
 	private String productosAhorro;
 	private String productosInversion;
 	private String productosAuto;
+	private String pagosLineaPolizasSuceptibles;
+	private String programarPagosPolizasSuceptibles;
+	private String envioCobroSuceptibles;
+	private String disponibleEnvioCobro;
+	private String productosSuceptiblesCuentaSaldo;
+	private String productosValidacionContratanteEmpresariales;
 
 	public String getProductosHogar() {
 		return productosHogar;
@@ -69,6 +75,54 @@ public class ProductosConfiguration {
 
 	public void setProductosVisiblesPortal(String productosVisiblesPortal) {
 		this.productosVisiblesPortal = productosVisiblesPortal;
+	}
+
+	public String getPagosLineaPolizasSuceptibles() {
+		return pagosLineaPolizasSuceptibles;
+	}
+
+	public void setPagosLineaPolizasSuceptibles(String pagosLineaPolizasSuceptibles) {
+		this.pagosLineaPolizasSuceptibles = pagosLineaPolizasSuceptibles;
+	}
+
+	public String getProgramarPagosPolizasSuceptibles() {
+		return programarPagosPolizasSuceptibles;
+	}
+
+	public void setProgramarPagosPolizasSuceptibles(String programarPagosPolizasSuceptibles) {
+		this.programarPagosPolizasSuceptibles = programarPagosPolizasSuceptibles;
+	}
+
+	public String getEnvioCobroSuceptibles() {
+		return envioCobroSuceptibles;
+	}
+
+	public void setEnvioCobroSuceptibles(String envioCobroSuceptibles) {
+		this.envioCobroSuceptibles = envioCobroSuceptibles;
+	}
+
+	public String getDisponibleEnvioCobro() {
+		return disponibleEnvioCobro;
+	}
+
+	public void setDisponibleEnvioCobro(String disponibleEnvioCobro) {
+		this.disponibleEnvioCobro = disponibleEnvioCobro;
+	}
+
+	public String getProductosSuceptiblesCuentaSaldo() {
+		return productosSuceptiblesCuentaSaldo;
+	}
+
+	public void setProductosSuceptiblesCuentaSaldo(String productosSuceptiblesCuentaSaldo) {
+		this.productosSuceptiblesCuentaSaldo = productosSuceptiblesCuentaSaldo;
+	}
+
+	public String getProductosValidacionContratanteEmpresariales() {
+		return productosValidacionContratanteEmpresariales;
+	}
+
+	public void setProductosValidacionContratanteEmpresariales(String productosValidacionContratanteEmpresariales) {
+		this.productosValidacionContratanteEmpresariales = productosValidacionContratanteEmpresariales;
 	}
 
 }
